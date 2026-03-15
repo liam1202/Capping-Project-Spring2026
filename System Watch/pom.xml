@@ -125,31 +125,39 @@
             </plugin>
 
             <!-- Create Windows app image for distribution -->
-            <plugin>
-                <groupId>org.panteleyev</groupId>
-                <artifactId>jpackage-maven-plugin</artifactId>
-                <version>1.7.6</version>
-                <executions>
-                    <execution>
-                        <id>build-app-image</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jpackage</goal>
-                        </goals>
-                        <configuration>
-                            <name>SystemWatch</name>
-                            <appVersion>${project.version}</appVersion>
-                            <mainClass>${mainClass}</mainClass>
-                            <mainJar>SystemWatch.jar</mainJar>
-                            <type>APP_IMAGE</type>
-                            <destination>${project.build.directory}/dist</destination>
-                            <vendor>System Watch Team</vendor>
-                            <description>System Watch desktop monitoring application</description>
-                            <winConsole>false</winConsole>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+<plugin>
+    <groupId>org.panteleyev</groupId>
+    <artifactId>jpackage-maven-plugin</artifactId>
+    <version>1.0.0</version>
+
+    <executions>
+        <execution>
+            <id>build-app-image</id>
+            <phase>package</phase>
+            <goals>
+                <goal>jpackage</goal>
+            </goals>
+
+            <configuration>
+                <name>SystemWatch</name>
+                <appVersion>${project.version}</appVersion>
+
+                <input>${project.build.directory}</input>
+
+                <mainJar>SystemWatch.jar</mainJar>
+                <mainClass>${mainClass}</mainClass>
+
+                <type>APP_IMAGE</type>
+                <destination>${project.build.directory}/dist</destination>
+
+                <vendor>System Watch Team</vendor>
+                <description>System Watch desktop monitoring application</description>
+
+                <winConsole>false</winConsole>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
 
         </plugins>
     </build>
