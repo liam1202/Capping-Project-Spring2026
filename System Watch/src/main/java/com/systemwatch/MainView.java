@@ -87,7 +87,14 @@ public class MainView {
         VBox.setVgrow(diskChart, Priority.ALWAYS);
         VBox.setVgrow(heatmapPane, Priority.ALWAYS);
 
-        SplitPane splitPane = new SplitPane(leftPanel, rightPanel);
+        // Wrap the visualization panel in a ScrollPane
+        ScrollPane rightScrollPane = new ScrollPane(rightPanel);
+        rightScrollPane.setFitToWidth(true);   // makes content match panel width
+        rightScrollPane.setFitToHeight(false); // allows vertical scrolling
+        rightScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        rightScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        SplitPane splitPane = new SplitPane(leftPanel, rightScrollPane);
         splitPane.setOrientation(Orientation.HORIZONTAL);
         splitPane.setDividerPositions(0.34);
 
