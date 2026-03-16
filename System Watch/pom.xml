@@ -128,7 +128,7 @@
             <plugin>
                 <groupId>org.panteleyev</groupId>
                 <artifactId>jpackage-maven-plugin</artifactId>
-                <version>1.7.6</version>
+                <version>1.7.4</version> <!--If version 1.0.0 compile works but jpackage build fails  original version 1.7.6-->
                 <executions>
                     <execution>
                         <id>build-app-image</id>
@@ -139,8 +139,9 @@
                         <configuration>
                             <name>SystemWatch</name>
                             <appVersion>${project.version}</appVersion>
-                            <mainClass>${mainClass}</mainClass>
+                            <input>${project.build.directory}</input>
                             <mainJar>SystemWatch.jar</mainJar>
+                            <mainClass>${mainClass}</mainClass>
                             <type>APP_IMAGE</type>
                             <destination>${project.build.directory}/dist</destination>
                             <vendor>System Watch Team</vendor>
