@@ -32,9 +32,13 @@ public class MainView {
     private final GridPane heatmap = new GridPane();
 
     public MainView() {
+        System.out.println("MainView: constructor start");
         buildLayout();
+        System.out.println("MainView: buildLayout complete");
         loadMockProcesses();
+        System.out.println("MainView: loadMockProcesses complete");
         wireEvents();
+        System.out.println("MainView: wireEvents complete");
     }
 
     public Parent getRoot() {
@@ -42,6 +46,7 @@ public class MainView {
     }
 
     private void buildLayout() {
+        System.out.println("MainView: entering buildLayout");
         Label title = new Label("System Watch");
         title.setStyle("-fx-font-size: 28px; -fx-font-weight: bold;");
 
@@ -102,6 +107,7 @@ public class MainView {
     }
 
     private void configureProcessTable() {
+        System.out.println("MainView: entering configureProcessTable");
         TableColumn<ProcessRow, Number> pidCol = new TableColumn<>("PID");
         pidCol.setCellValueFactory(data -> data.getValue().pidProperty());
         pidCol.setPrefWidth(70);
