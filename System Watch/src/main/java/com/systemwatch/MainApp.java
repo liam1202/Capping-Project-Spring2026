@@ -32,6 +32,22 @@ public class MainApp extends Application {
 
     public static void main(String[] args) {
 
+        // Create Metrics
+        GatherMetrics metrics = new GatherMetrics();
+
+        // TYLER:
+        // THE FOLLOWING IS TEST CODE TO SEE IF GATHERING METRICS WORKS CORRECTLY
+
+        // Print system uptime
+        System.out.println("System Uptime: " + metrics.getUptime() + " seconds");
+
+        // Gets processor information
+        System.out.println("Processor Information: " + metrics.getProcessorInfo());
+
+        // Gets memory information
+        System.out.println("Total Memory: " + metrics.getTotalMemory());
+        System.out.println("Available Memory: " + metrics.getAvailableMemory());
+
         launch(args);
     }
 }
