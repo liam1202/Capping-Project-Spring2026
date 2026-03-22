@@ -3,7 +3,11 @@ package com.systemwatch;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.GlobalMemory;
+import oshi.hardware.HWDiskStore;
 import oshi.software.os.OperatingSystem;
+
+import java.util.ArrayList;
+import java.util.List;
 
 // BACKEND: Using OSHI library to gather system metrics
 // Source: https://github.com/oshi/oshi
@@ -14,6 +18,7 @@ public class GatherMetrics {
     private final OperatingSystem os;
     private final CentralProcessor processor;
     private final GlobalMemory memory;
+    private final List<HWDiskStore> diskStores;
 
     // Default constructor, which asserts system metrics
     GatherMetrics(){
@@ -21,6 +26,7 @@ public class GatherMetrics {
         os = si.getOperatingSystem();
         processor = si.getHardware().getProcessor();
         memory = si.getHardware().getMemory();
+        diskStores = si.getHardware().getDiskStores();
 
         // Assert basic system metrics
         assert(os != null) : "OS not detected";
@@ -30,6 +36,7 @@ public class GatherMetrics {
 
         assert(processor != null) : "Processor not detected";
         assert(memory != null) : "Memory not detected";
+        assert(!diskStores.isEmpty()) : "There should be at least one disk!";
     }
 
     // Gets system uptime
@@ -57,5 +64,18 @@ public class GatherMetrics {
     public long getTotalMemory() { return memory.getTotal(); }
     public long getAvailableMemory() { return memory.getAvailable(); }
 
+    // GATHER DISK METRICS
+    public List<String> getDiskModels() {
+        // Creates list of disk models
+        List<String> models = new ArrayList<>();
+        int num = 0;
 
+        // Iterate through all disks and add model to list
+        for (HWDiskStore disk : diskStores) {
+            num++;
+            models.add("Disk #" + num + ": " + disk.getModel());
+        }
+
+        return models;
+    }
 }

@@ -38,6 +38,9 @@ public class MainApp extends Application {
         // TYLER:
         // THE FOLLOWING IS TEST CODE TO SEE IF GATHERING METRICS WORKS CORRECTLY
 
+        System.out.println("\n--------------------------------------");
+        System.out.println("BASIC METRICS:");
+
         // Print system uptime
         System.out.println("System Uptime: " + metrics.getUptime() + " seconds");
 
@@ -47,6 +50,10 @@ public class MainApp extends Application {
         // Gets memory information
         System.out.println("Total Memory: " + metrics.getTotalMemory());
         System.out.println("Available Memory: " + metrics.getAvailableMemory());
+
+        System.out.println("Disk Models: " + metrics.getDiskModels());
+
+        System.out.println("--------------------------------------\n");
 
         launch(args);
     }
