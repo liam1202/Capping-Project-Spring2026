@@ -1,9 +1,13 @@
 module com.systemwatch {
     requires javafx.controls;
     requires javafx.fxml;
-    requires java.sql;
     requires com.github.oshi;
 
-    exports com.systemwatch;
+    requires org.slf4j;
+    requires ch.qos.logback.classic;
+    requires java.sql;
+    requires java.desktop;
+
     opens com.systemwatch to javafx.fxml;
+    exports com.systemwatch;
 }
