@@ -162,6 +162,15 @@ public class MainView {
         try {
             ProcessDao dao = new ProcessDao();
             List<ProcessRecord> records = dao.getCurrentProcesses();
+
+            System.out.println("Records returned: " + records.size());
+            for (ProcessRecord r : records) {
+                System.out.println("PID=" + r.pid + " name=" + r.name +
+                        " CPU=" + r.cpuPercent +
+                        " RAM=" + r.ramPercent +
+                        " Disk=" + r.diskPercent);
+            }
+
             processRows.clear();
             for (ProcessRecord r : records) {
                 String state = r.markedForSuspension == 0 ? "Running" : "Suspended";
@@ -169,6 +178,7 @@ public class MainView {
             }
             processRows.sort(Comparator.comparingDouble(ProcessRow::getCpuPercent).reversed());
         } catch (Exception e) {
+            e.printStackTrace();
             showAlert("Error", "Failed to load processes: " + e.getMessage());
         }
     }

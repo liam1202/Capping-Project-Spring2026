@@ -4,6 +4,7 @@ com\systemwatch\db\CpuDao.class
 com\systemwatch\model\DiskRecord.class
 com\systemwatch\db\ProcessDao.class
 com\systemwatch\db\RamDao.class
+com\systemwatch\DatabasePopulator.class
 module-info.class
 com\systemwatch\ProcessRow.class
 com\systemwatch\db\DiskDao.class
