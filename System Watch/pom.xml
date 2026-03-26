@@ -18,6 +18,7 @@
         <slf4j.version>2.0.13</slf4j.version>
         <logback.version>1.5.6</logback.version>
         <junit.version>5.10.2</junit.version>
+        <oshi.version>6.4.2</oshi.version>
 
         <mainClass>com.systemwatch.MainApp</mainClass>
     </properties>
@@ -51,6 +52,13 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
+        </dependency>
+
+        <!-- System Metrics -->
+        <dependency>
+            <groupId>com.github.oshi</groupId>
+            <artifactId>oshi-core-java11</artifactId>
+            <version>5.6.0</version>
         </dependency>
 
         <dependency>
