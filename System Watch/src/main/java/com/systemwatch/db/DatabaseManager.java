@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -64,6 +65,17 @@ public class DatabaseManager {
             }
 
             stmt.executeUpdate(sql.toString());
+        }
+    }
+
+    public static boolean isProcessTableEmpty() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM process";
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            return rs.next() && rs.getInt(1) == 0;
         }
     }
 }

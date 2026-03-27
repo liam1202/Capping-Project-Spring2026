@@ -1,6 +1,6 @@
 package com.systemwatch;
 import com.systemwatch.db.DatabaseManager;
-
+import com.systemwatch.DatabasePopulator;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -13,6 +13,10 @@ public class MainApp extends Application {
 public void start(Stage stage) {
     try {
         DatabaseManager.initDatabase();
+
+        if (DatabaseManager.isProcessTableEmpty()) {
+            DatabasePopulator.populateDemoData();
+        }
 
         MainView mainView = new MainView();
         Scene scene = new Scene(mainView.getRoot(), 1300, 800);

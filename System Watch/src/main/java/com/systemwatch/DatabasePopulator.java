@@ -11,18 +11,20 @@ import java.util.Random;
 
 public class DatabasePopulator {
 
-    public static void main(String[] args) throws Exception {
-        // Initialize database
-        DatabaseManager.initDatabase();
-
-        // Populate mock data
+    public static void populateDemoData() throws Exception {
         populateCpuData();
         populateRamData();
         populateDiskData();
         populateProcessData();
+    }
 
+    public static void main(String[] args) throws Exception {
+        DatabaseManager.initDatabase();
+        populateDemoData();
         System.out.println("Mock data populated successfully!");
     }
+
+    
 
     private static void populateCpuData() throws Exception {
         String sql = "INSERT INTO cpu (timestamp, cpu_usage_percentage, interrupts, user_mode_time, kernel_mode_time, thread_count) VALUES (?, ?, ?, ?, ?, ?)";
