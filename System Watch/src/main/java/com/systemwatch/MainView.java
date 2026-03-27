@@ -14,6 +14,10 @@ import javafx.scene.shape.Rectangle;
 import java.util.Comparator;
 import java.util.Random;
 
+import com.systemwatch.db.*;
+import com.systemwatch.model.*;
+import java.util.List;
+
 public class MainView {
 
     private final BorderPane root = new BorderPane();
@@ -33,7 +37,7 @@ public class MainView {
 
     public MainView() {
         buildLayout();
-        loadMockProcesses();
+        loadProcesses();
         wireEvents();
     }
 
@@ -95,6 +99,8 @@ public class MainView {
         rightScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
         SplitPane splitPane = new SplitPane(leftPanel, rightScrollPane);
+
+        
         splitPane.setOrientation(Orientation.HORIZONTAL);
         splitPane.setDividerPositions(0.34);
 
@@ -161,23 +167,36 @@ public class MainView {
         return chart;
     }
 
-    private void loadMockProcesses() {
-        processRows.clear();
-        processRows.addAll(
-                new ProcessRow(1, "java.exe", 35.0, 28.0, 12.0, "Running"),
-                new ProcessRow(0, "Chrome.exe", 18.0, 22.0, 5.0, "Running"),
-                new ProcessRow(2, "FireFox.exe", 7.0, 14.0, 2.0, "Suspended"),
-                new ProcessRow(3, "explorer.exe", 2.0, 4.0, 1.0, "Running")
-        );
+    private void loadProcesses() {
+        try {
+            ProcessDao dao = new ProcessDao();
+            List<ProcessRecord> records = dao.getCurrentProcesses();
 
-        processRows.sort(Comparator.comparingDouble(ProcessRow::getCpuPercent).reversed());
+            System.out.println("Records returned: " + records.size());
+            for (ProcessRecord r : records) {
+                System.out.println("PID=" + r.pid + " name=" + r.name +
+                        " CPU=" + r.cpuPercent +
+                        " RAM=" + r.ramPercent +
+                        " Disk=" + r.diskPercent);
+            }
+
+            processRows.clear();
+            for (ProcessRecord r : records) {
+                String state = r.markedForSuspension == 0 ? "Running" : "Suspended";
+                processRows.add(new ProcessRow(r.pid, r.name, r.cpuPercent, r.ramPercent, r.diskPercent, state));
+            }
+            processRows.sort(Comparator.comparingDouble(ProcessRow::getCpuPercent).reversed());
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Error", "Failed to load processes: " + e.getMessage());
+        }
     }
 
     private void wireEvents() {
         processTable.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, selected) -> {
             if (selected != null) {
                 selectedProcessLabel.setText("Selected: " + selected.getProcessName() + " (PID " + selected.getPid() + ")");
-                loadMockVisualizations(selected);
+                loadVisualizations(selected);
             }
         });
 
@@ -210,50 +229,65 @@ public class MainView {
         });
     }
 
-    private void loadMockVisualizations(ProcessRow selected) {
-        populateChart(cpuChart, selected.getCpuPercent());
-        populateChart(ramChart, selected.getRamPercent());
-        populateChart(diskChart, selected.getDiskPercent());
-        populateHeatmap(selected);
+    private void loadVisualizations(ProcessRow selected) {
+        try {
+            ProcessDao dao = new ProcessDao();
+            List<ProcessRecord> history = dao.getHistoryForPid(selected.getPid(), 12);
+            populateChart(cpuChart, history, "cpu");
+            populateChart(ramChart, history, "ram");
+            populateChart(diskChart, history, "disk");
+            populateHeatmap(selected, history);
+        } catch (Exception e) {
+            showAlert("Error", "Failed to load visualizations: " + e.getMessage());
+        }
     }
 
-    private void populateChart(LineChart<String, Number> chart, double baseValue) {
+    private void populateChart(LineChart<String, Number> chart, List<ProcessRecord> history, String type) {
         chart.getData().clear();
 
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        Random random = new Random();
-
-        for (int i = 1; i <= 12; i++) {
-            double offset = (random.nextDouble() * 12.0) - 6.0;
-            double value = Math.max(0, Math.min(100, baseValue + offset));
-            series.getData().add(new XYChart.Data<>("T" + i, value));
+        for (int i = history.size() - 1; i >= 0; i--) {
+            ProcessRecord r = history.get(i);
+            double value = 0;
+            switch (type) {
+                case "cpu": value = r.cpuPercent; break;
+                case "ram": value = r.ramPercent; break;
+                case "disk": value = r.diskPercent; break;
+            }
+            series.getData().add(new XYChart.Data<>("T" + (history.size() - i), value));
         }
 
         chart.getData().add(series);
     }
 
-    private void populateHeatmap(ProcessRow selected) {
+    private void populateHeatmap(ProcessRow selected, List<ProcessRecord> history) {
         heatmap.getChildren().clear();
 
-        Random random = new Random();
+        if (history.isEmpty()) return;
 
-        addHeatmapRow("CPU", 0, selected.getCpuPercent(), random);
-        addHeatmapRow("RAM", 1, selected.getRamPercent(), random);
-        addHeatmapRow("Disk", 2, selected.getDiskPercent(), random);
+        addHeatmapRow("CPU", 0, history);
+        addHeatmapRow("RAM", 1, history);
+        addHeatmapRow("Disk", 2, history);
     }
 
-    private void addHeatmapRow(String label, int rowIndex, double baseValue, Random random) {
+    private void addHeatmapRow(String label, int rowIndex, List<ProcessRecord> history) {
         heatmap.add(new Label(label), 0, rowIndex);
 
-        for (int i = 0; i < 12; i++) {
-            double value = Math.max(0, Math.min(100, baseValue + ((random.nextDouble() * 20) - 10)));
+        for (int i = history.size() - 1; i >= 0; i--) {
+            ProcessRecord r = history.get(i);
+            double value = 0;
+            switch (label) {
+                case "CPU": value = r.cpuPercent; break;
+                case "RAM": value = r.ramPercent; break;
+                case "Disk": value = r.diskPercent; break;
+            }
 
             Rectangle rect = new Rectangle(24, 24);
             rect.setFill(colorForPercent(value));
             rect.setStroke(Color.GRAY);
 
             Tooltip.install(rect, new Tooltip(label + ": " + String.format("%.1f%%", value)));
-            heatmap.add(rect, i + 1, rowIndex);
+            heatmap.add(rect, (history.size() - i), rowIndex);
         }
     }
 
