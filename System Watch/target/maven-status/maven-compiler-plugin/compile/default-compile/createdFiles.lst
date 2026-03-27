@@ -10,6 +10,7 @@ com\systemwatch\ProcessRow.class
 com\systemwatch\db\DiskDao.class
 com\systemwatch\MainView$1.class
 com\systemwatch\model\CpuRecord.class
+com\systemwatch\GatherMetrics.class
 com\systemwatch\MainApp.class
 com\systemwatch\model\ProcessRecord.class
 com\systemwatch\model\RamRecord.class
