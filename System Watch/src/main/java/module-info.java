@@ -10,4 +10,5 @@ module com.systemwatch {
 
     opens com.systemwatch to javafx.fxml;
     exports com.systemwatch;
+    exports com.systemwatch.db;
 }
