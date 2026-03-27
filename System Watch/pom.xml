@@ -18,7 +18,6 @@
         <slf4j.version>2.0.13</slf4j.version>
         <logback.version>1.5.6</logback.version>
         <junit.version>5.10.2</junit.version>
-        <oshi.version>6.4.2</oshi.version>
 
         <mainClass>com.systemwatch.MainApp</mainClass>
     </properties>
@@ -54,13 +53,6 @@
             <version>${logback.version}</version>
         </dependency>
 
-        <!-- System Metrics -->
-        <dependency>
-            <groupId>com.github.oshi</groupId>
-            <artifactId>oshi-core-java11</artifactId>
-            <version>5.6.0</version>
-        </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -70,53 +62,236 @@
     </dependencies>
 
     <build>
-        <plugins>
-            <!-- Compile -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-                <configuration>
-                    <release>${maven.compiler.release}</release>
-                </configuration>
-            </plugin>
+    <plugins>
+        <!-- Compile -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.13.0</version>
+            <configuration>
+                <release>${maven.compiler.release}</release>
+            </configuration>
+        </plugin>
 
-            <!-- Tests -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
-                <configuration>
-                    <useModulePath>false</useModulePath>
-                </configuration>
-            </plugin>
+        <!-- Tests -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.2.5</version>
+            <configuration>
+                <useModulePath>false</useModulePath>
+            </configuration>
+        </plugin>
 
-            <!-- Execute Java programs -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <mainClass>com.systemwatch.DatabasePopulator</mainClass>
-                </configuration>
-            </plugin>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.1.0</version>
+            <configuration>
+                <mainClass>com.systemwatch.DatabasePopulator</mainClass>
+            </configuration>
+        </plugin>
 
-            <!-- Run app in development -->
-            <plugin>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version>
-                <configuration>
-                    <mainClass>${mainClass}</mainClass>
-                    <launcher>SystemWatch</launcher>
-                    <jlinkZipName>SystemWatch</jlinkZipName>
-                    <jlinkImageName>SystemWatch</jlinkImageName>
-                    <stripDebug>true</stripDebug>
-                    <noManPages>true</noManPages>
-                    <noHeaderFiles>true</noHeaderFiles>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+        <!-- Build normal jar -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>3.4.2</version>
+            <configuration>
+                <archive>
+                    <manifest>
+                        <mainClass>${mainClass}</mainClass>
+                    </manifest>
+                </archive>
+            </configuration>
+        </plugin>
+
+        <!-- Copy runtime dependency jars (sqlite, logback, etc.) -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>3.6.1</version>
+            <executions>
+                <execution>
+                    <id>copy-runtime-dependencies</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>copy-dependencies</goal>
+                    </goals>
+                    <configuration>
+                        <includeScope>runtime</includeScope>
+                        <outputDirectory>${project.build.directory}/input</outputDirectory>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+
+        <!-- Copy main jar into same input folder -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>3.3.1</version>
+            <executions>
+                <execution>
+                    <id>copy-main-jar</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>copy-resources</goal>
+                    </goals>
+                    <configuration>
+                        <outputDirectory>${project.build.directory}/input</outputDirectory>
+                        <resources>
+                            <resource>
+                                <directory>${project.build.directory}</directory>
+                                <includes>
+                                    <include>${project.build.finalName}.jar</include>
+                                </includes>
+                            </resource>
+                        </resources>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+
+        <!-- Run app in development / build runtime image -->
+        <plugin>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-maven-plugin</artifactId>
+            <version>0.0.8</version>
+            <configuration>
+                <mainClass>${mainClass}</mainClass>
+                <launcher>SystemWatch</launcher>
+                <jlinkZipName>SystemWatch</jlinkZipName>
+                <jlinkImageName>SystemWatch</jlinkImageName>
+                <stripDebug>true</stripDebug>
+                <noManPages>true</noManPages>
+                <noHeaderFiles>true</noHeaderFiles>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+
+<profiles>
+    <profile>
+        <id>dist</id>
+        <build>
+            <plugins>
+
+                <!-- Build JavaFX runtime image -->
+                <plugin>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-maven-plugin</artifactId>
+                    <version>0.0.8</version>
+                    <executions>
+                        <execution>
+                            <id>create-runtime-image</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>jlink</goal>
+                            </goals>
+                            <configuration>
+                                <mainClass>${mainClass}</mainClass>
+                                <launcher>SystemWatch</launcher>
+                                <jlinkZipName>SystemWatch</jlinkZipName>
+                                <jlinkImageName>SystemWatch</jlinkImageName>
+                                <stripDebug>true</stripDebug>
+                                <noManPages>true</noManPages>
+                                <noHeaderFiles>true</noHeaderFiles>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- Run jpackage commands -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>3.1.0</version>
+                    <executions>
+
+                        <!-- Create app image -->
+                        <execution>
+                            <id>jpackage-app-image</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                            <configuration>
+                                <executable>jpackage</executable>
+                                <arguments>
+                                    <argument>--type</argument>
+                                    <argument>app-image</argument>
+
+                                    <argument>--name</argument>
+                                    <argument>SystemWatch</argument>
+
+                                    <argument>--input</argument>
+                                    <argument>${project.build.directory}</argument>
+
+                                    <argument>--main-jar</argument>
+                                    <argument>${project.build.finalName}.jar</argument>
+
+                                    <argument>--main-class</argument>
+                                    <argument>${mainClass}</argument>
+
+                                    <argument>--runtime-image</argument>
+                                    <argument>${project.build.directory}/SystemWatch</argument>
+
+                                    <argument>--dest</argument>
+                                    <argument>${project.build.directory}/appimage</argument>
+
+                                    <argument>--vendor</argument>
+                                    <argument>System Watch Team</argument>
+
+                                    <argument>--app-version</argument>
+                                    <argument>${project.version}</argument>
+
+                                    <argument>--description</argument>
+                                    <argument>System Watch desktop monitoring application</argument>
+                                </arguments>
+                            </configuration>
+                        </execution>
+
+                        <!-- Create MSI installer -->
+                        <execution>
+                            <id>jpackage-msi</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                            <configuration>
+                                <executable>jpackage</executable>
+                                <arguments>
+                                    <argument>--type</argument>
+                                    <argument>msi</argument>
+
+                                    <argument>--name</argument>
+                                    <argument>SystemWatch</argument>
+
+                                    <argument>--app-image</argument>
+                                    <argument>${project.build.directory}/appimage/SystemWatch</argument>
+
+                                    <argument>--dest</argument>
+                                    <argument>${project.build.directory}/installer</argument>
+
+                                    <argument>--vendor</argument>
+                                    <argument>System Watch Team</argument>
+
+                                    <argument>--app-version</argument>
+                                    <argument>${project.version}</argument>
+
+                                    <argument>--win-shortcut</argument>
+                                    <argument>--win-dir-chooser</argument>
+                                </arguments>
+                            </configuration>
+                        </execution>
+
+                    </executions>
+                </plugin>
+
+            </plugins>
+        </build>
+    </profile>
+</profiles>
 
 </project>
