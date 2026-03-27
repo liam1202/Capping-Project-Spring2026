@@ -11,6 +11,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.application.Platform;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,6 +30,8 @@ public class MainView {
     private final Button suspendResumeButton = new Button("Resume / Suspend");
     private final Button exportPdfButton = new Button("Export PDF");
     private final Button clearSelectionButton = new Button("Clear Selection");
+
+    private final ScrollPane rightScrollPane = new ScrollPane();
 
     private final LineChart<String, Number> cpuChart = buildChart("CPU Usage Graph");
     private final LineChart<String, Number> ramChart = buildChart("RAM Usage Graph");
@@ -99,7 +102,7 @@ public class MainView {
         VBox.setVgrow(diskChart, Priority.ALWAYS);
         VBox.setVgrow(heatmapPane, Priority.ALWAYS);
 
-        ScrollPane rightScrollPane = new ScrollPane(rightPanel);
+        rightScrollPane.setContent(rightPanel);
         rightScrollPane.setFitToWidth(true);
         rightScrollPane.setFitToHeight(false);
         rightScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -110,6 +113,12 @@ public class MainView {
         splitPane.setDividerPositions(0.34);
 
         root.setCenter(splitPane);
+    }
+
+    private void preserveScrollPosition(Runnable action) {
+        double currentV = rightScrollPane.getVvalue();
+        action.run();
+        Platform.runLater(() -> rightScrollPane.setVvalue(currentV));
     }
 
     private void configureProcessTable() {
@@ -213,19 +222,21 @@ public class MainView {
 
     private void wireEvents() {
         processTable.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, selected) -> {
-            updateActionState(selected);
+            preserveScrollPosition(() -> {
+                updateActionState(selected);
 
-            if (selected != null) {
-                selectedProcessLabel.setText("Selected: " + selected.getProcessName() + " (PID " + selected.getPid() + ")");
-                loadProcessVisualizations(selected);
-            } else {
-                selectedProcessLabel.setText("Overall System Metrics");
-                loadOverallVisualizations();
-            }
+                if (selected != null) {
+                    selectedProcessLabel.setText("Selected: " + selected.getProcessName() + " (PID " + selected.getPid() + ")");
+                    loadProcessVisualizations(selected);
+                } else {
+                    selectedProcessLabel.setText("Overall System Metrics");
+                    loadOverallVisualizations();
+                }
+            });
         });
 
         clearSelectionButton.setOnAction(event -> {
-            processTable.getSelectionModel().clearSelection();
+            preserveScrollPosition(() -> processTable.getSelectionModel().clearSelection());
         });
 
         suspendResumeButton.setOnAction(event -> {
