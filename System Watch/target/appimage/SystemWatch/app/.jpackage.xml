@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<jpackage-state version="26" platform="windows">
+  <app-version>1.0.0</app-version>
+  <main-launcher name="SystemWatch">
+    <description>System Watch desktop monitoring application</description>
+  </main-launcher></jpackage-state>
