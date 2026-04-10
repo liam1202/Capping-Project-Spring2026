@@ -16,11 +16,13 @@ public class DatabasePopulator {
         populateRamData();
         populateDiskData();
         populateProcessData();
+        
     }
 
     public static void main(String[] args) throws Exception {
         DatabaseManager.initDatabase();
         populateDemoData();
+        populateTestData();
         System.out.println("Mock data populated successfully!");
     }
 
@@ -144,4 +146,53 @@ public class DatabasePopulator {
             }
         }
     }
+
+    public static void populateTestData() throws Exception {
+            populateCpuData();
+            populateRamData();
+            populateDiskData();
+            populateProcessDataTest(); // new method
+        }
+
+    public static void deleteTestData() throws Exception {
+        String sql = "DELETE FROM process WHERE process_name LIKE 'TEST_%'";
+
+        try (Connection conn = DatabaseManager.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            int deleted = ps.executeUpdate();
+            System.out.println("Deleted test rows: " + deleted);
+        }
+    }
+
+    private static void populateProcessDataTest() throws Exception {
+        String sql = "INSERT INTO process (timestamp, pid, process_name, cpu_percent, ram_percent, disk_percent, marked_for_suspension, valid_for_tracking) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseManager.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            Random random = new Random();
+            long baseTime = System.currentTimeMillis();
+
+            String[] processNames = {"TEST_app.exe", "TEST_browser.exe"};
+            int[] pids = {1001, 1002};
+
+            for (int p = 0; p < processNames.length; p++) {
+                for (int i = 0; i < 5; i++) {
+                    long timestamp = baseTime + i * 1000;
+
+                    ps.setLong(1, timestamp);
+                    ps.setInt(2, pids[p]);
+                    ps.setString(3, processNames[p]);
+                    ps.setDouble(4, random.nextDouble() * 50);
+                    ps.setDouble(5, random.nextDouble() * 30);
+                    ps.setDouble(6, random.nextDouble() * 10);
+                    ps.setInt(7, 0);
+                    ps.setInt(8, 1);
+
+                    ps.executeUpdate();
+                }
+            }
+        }
+}
 }

@@ -13,9 +13,12 @@ public class MainApp extends Application {
 public void start(Stage stage) {
     try {
         DatabaseManager.initDatabase();
+        //DatabasePopulator.populateTestData();
+        DatabasePopulator.deleteTestData();
 
         if (DatabaseManager.isProcessTableEmpty()) {
             DatabasePopulator.populateDemoData();
+            //DatabasePopulator.populateTestData();
         }
 
         MainView mainView = new MainView();
