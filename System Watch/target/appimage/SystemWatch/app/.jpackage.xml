@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
-<jpackage-state version="26" platform="windows">
+<jpackage-state version="24" platform="windows">
   <app-version>1.0.0</app-version>
-  <main-launcher name="SystemWatch">
-    <description>System Watch desktop monitoring application</description>
-  </main-launcher></jpackage-state>
+  <main-launcher>SystemWatch</main-launcher>
+  <main-class>com.systemwatch.MainApp</main-class>
+  <signed>false</signed>
+  <app-store>false</app-store></jpackage-state>
