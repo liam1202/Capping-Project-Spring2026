@@ -1,6 +1,7 @@
 package com.systemwatch;
 import com.systemwatch.db.DatabaseManager;
 import com.systemwatch.DatabasePopulator;
+import com.systemwatch.MetricsRepository;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -12,9 +13,38 @@ public class MainApp extends Application {
     @Override
 public void start(Stage stage) {
     try {
+        DatabaseManager.resetDatabase();
         DatabaseManager.initDatabase();
 
-        if (DatabaseManager.isProcessTableEmpty()) {
+        // Gets repository which connects backend OS metric gathering to database
+        MetricsRepository repo = new MetricsRepository();
+
+        // SET TO FALSE IF YOU WANT TO TEST MOCK DATA
+        boolean showRealData = true;
+
+        // SHOWS REAL DATA FROM THE OS
+        if (showRealData) {
+            // START DATA FIRST
+            repo.collectAll();
+
+            // Using a thread, will collect all metrics every 5 seconds
+            Thread metricsThread = new Thread(() -> {
+                while (true) {
+                    repo.collectAll();
+
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            // Stops when app closes
+            metricsThread.setDaemon(true);
+            metricsThread.start();
+        } else {
+            // MOCK DATA
             DatabasePopulator.populateDemoData();
         }
 
@@ -40,28 +70,9 @@ public void start(Stage stage) {
 
     public static void main(String[] args) {
 
-        // Create Metrics
+        // TESTS METRICS GATHERING
         GatherMetrics metrics = new GatherMetrics();
-
-        // TYLER:
-        // THE FOLLOWING IS TEST CODE TO SEE IF GATHERING METRICS WORKS CORRECTLY
-
-        System.out.println("\n--------------------------------------");
-        System.out.println("BASIC METRICS:");
-
-        // Print system uptime
-        System.out.println("System Uptime: " + metrics.getUptime() + " seconds");
-
-        // Gets processor information
-        System.out.println("Processor Information: " + metrics.getProcessorInfo());
-
-        // Gets memory information
-        System.out.println("Total Memory: " + metrics.getTotalMemory());
-        System.out.println("Available Memory: " + metrics.getAvailableMemory());
-
-        System.out.println("Disk Models: " + metrics.getDiskModels());
-
-        System.out.println("--------------------------------------\n");
+        metrics.printResults();
 
         launch(args);
     }

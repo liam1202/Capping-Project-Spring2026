@@ -68,6 +68,22 @@ public class DatabaseManager {
         }
     }
 
+    // Reset database so data doesn't persist
+    public static void resetDatabase() throws Exception {
+        String appData = System.getenv("APPDATA");
+        Path dbDir;
+
+        if (appData != null && !appData.isBlank()) {
+            dbDir = Paths.get(appData, "SystemWatch");
+        } else {
+            dbDir = Paths.get(System.getProperty("user.home"), ".systemwatch");
+        }
+
+        Path dbPath = dbDir.resolve(DB_FILE_NAME);
+
+        Files.deleteIfExists(dbPath);
+    }
+
     public static boolean isProcessTableEmpty() throws SQLException {
         String sql = "SELECT COUNT(*) FROM process";
 

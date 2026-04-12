@@ -1,5 +1,6 @@
 com\systemwatch\MainView.class
 com\systemwatch\db\DatabaseManager.class
+com\systemwatch\MetricsRepository.class
 com\systemwatch\db\CpuDao.class
 com\systemwatch\model\DiskRecord.class
 com\systemwatch\db\ProcessDao.class
@@ -11,6 +12,8 @@ com\systemwatch\db\DiskDao.class
 com\systemwatch\MainView$1.class
 com\systemwatch\model\CpuRecord.class
 com\systemwatch\GatherMetrics.class
+com\systemwatch\GatherMetrics$DiskMetrics.class
+com\systemwatch\GatherMetrics$ProcessMetrics.class
 com\systemwatch\MainApp.class
 com\systemwatch\model\ProcessRecord.class
 com\systemwatch\model\RamRecord.class
