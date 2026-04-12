@@ -264,7 +264,12 @@ public class MainView {
                 String state = r.markedForSuspension == 0 ? "Running" : "Suspended";
                 processRows.add(new ProcessRow(r.pid, r.name, r.cpuPercent, r.ramPercent, r.diskPercent, state));
             }
-            processRows.sort(Comparator.comparingDouble(ProcessRow::getCpuPercent).reversed());
+
+            // Preserve whatever sort the user currently has applied
+            if (!processTable.getSortOrder().isEmpty()) {
+                processTable.sort();
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             showAlert("Error", "Failed to load processes: " + e.getMessage());
