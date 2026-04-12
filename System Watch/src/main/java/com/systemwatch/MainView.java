@@ -13,6 +13,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.application.Platform;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,6 +26,8 @@ import com.systemwatch.model.*;
 public class MainView {
 
     private final BorderPane root = new BorderPane();
+
+    private final Timeline refreshTimeline = new Timeline();
 
     private final TableView<ProcessRow> processTable = new TableView<>();
     private final ObservableList<ProcessRow> processRows = FXCollections.observableArrayList();
@@ -45,10 +51,55 @@ public class MainView {
         wireEvents();
         loadOverallVisualizations();   // default state when nothing is selected
         updateActionState(null);
+        startAutoRefresh();
     }
 
     public Parent getRoot() {
         return root;
+    }
+
+    private void startAutoRefresh() {
+        refreshTimeline.getKeyFrames().setAll(
+            new KeyFrame(Duration.seconds(5), event -> refreshUiFromDatabase())
+        );
+        refreshTimeline.setCycleCount(Timeline.INDEFINITE);
+        refreshTimeline.play();
+    }
+
+    private void refreshUiFromDatabase() {
+        try {
+            ProcessRow selected = processTable.getSelectionModel().getSelectedItem();
+            Integer selectedPid = (selected == null) ? null : selected.getPid();
+
+            loadProcesses();
+
+            if (selectedPid != null) {
+                ProcessRow reselected = null;
+                for (ProcessRow row : processRows) {
+                    if (row.getPid() == selectedPid) {
+                        reselected = row;
+                        break;
+                    }
+                }
+
+                if (reselected != null) {
+                    processTable.getSelectionModel().select(reselected);
+                    selectedProcessLabel.setText("Selected: " + reselected.getProcessName() + " (PID " + reselected.getPid() + ")");
+                    loadProcessVisualizations(reselected);
+                    updateActionState(reselected);
+                } else {
+                    processTable.getSelectionModel().clearSelection();
+                    selectedProcessLabel.setText("Overall System Metrics");
+                    loadOverallVisualizations();
+                    updateActionState(null);
+                }
+            } else {
+                loadOverallVisualizations();
+                updateActionState(null);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void buildLayout() {
