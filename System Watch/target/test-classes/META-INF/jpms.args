@@ -1,0 +1,4 @@
+--patch-module
+com.systemwatch=_
+--add-reads
+com.systemwatch=ALL-UNNAMED
