@@ -18,7 +18,7 @@ public void start(Stage stage) {
 
         if (DatabaseManager.isProcessTableEmpty()) {
             DatabasePopulator.populateDemoData();
-            //DatabasePopulator.populateTestData();
+            DatabasePopulator.populateTestData();
         }
 
         MainView mainView = new MainView();
