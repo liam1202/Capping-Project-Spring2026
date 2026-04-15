@@ -16,21 +16,25 @@ import java.sql.Statement;
 public class DatabaseManager {
 
     private static final String DB_FILE_NAME = "systemwatch.db";
+    private static final String DB_PATH_PROPERTY = "systemwatch.db.path";
 
     private static String buildDatabaseUrl() throws Exception {
-        String appData = System.getenv("APPDATA");
-        Path dbDir;
+        Path dbPath = getDatabasePath();
+        Files.createDirectories(dbPath.getParent());
+        return "jdbc:sqlite:" + dbPath.toAbsolutePath();
+    }
 
-        if (appData != null && !appData.isBlank()) {
-            dbDir = Paths.get(appData, "SystemWatch");
-        } else {
-            dbDir = Paths.get(System.getProperty("user.home"), ".systemwatch");
+    private static Path getDatabasePath() throws Exception {
+        String explicitPath = System.getProperty(DB_PATH_PROPERTY);
+        if (explicitPath != null && !explicitPath.isBlank()) {
+            return Paths.get(explicitPath).toAbsolutePath();
         }
 
-        Files.createDirectories(dbDir);
-
-        Path dbPath = dbDir.resolve(DB_FILE_NAME);
-        return "jdbc:sqlite:" + dbPath.toAbsolutePath();
+        String appData = System.getenv("APPDATA");
+        if (appData != null && !appData.isBlank()) {
+            return Paths.get(appData, "SystemWatch", DB_FILE_NAME).toAbsolutePath();
+        }
+        return Paths.get(System.getProperty("user.home"), ".systemwatch", DB_FILE_NAME).toAbsolutePath();
     }
 
     public static Connection getConnection() throws SQLException {
