@@ -57,8 +57,8 @@ public class MetricsRepository {
             ps.setLong(1, System.currentTimeMillis());
             ps.setLong(2, metrics.getTotalMemory());
             ps.setLong(3, metrics.getUsedMemory());
-            ps.setLong(4, metrics.getCachedMemory());
-            ps.setLong(5, metrics.getPageFaults());
+            ps.setLong(4, metrics.getSwapUsed());
+            ps.setLong(5, metrics.getSwapPagesIn());
 
             ps.executeUpdate();
         }
@@ -81,8 +81,9 @@ public class MetricsRepository {
                 ps.setLong(4, d.used);
                 ps.setLong(5, d.free);
 
-                ps.executeUpdate();
+                ps.addBatch();
             }
+            ps.executeBatch();
         }
     }
 
@@ -92,11 +93,9 @@ public class MetricsRepository {
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             long time = System.currentTimeMillis();
 
             for (GatherMetrics.ProcessMetrics p : metrics.getProcessMetrics()) {
-
                 ps.setLong(1, time);
                 ps.setInt(2, p.pid);
                 ps.setString(3, p.name);

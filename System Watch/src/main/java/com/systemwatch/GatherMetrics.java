@@ -9,7 +9,9 @@ import oshi.software.os.OSFileStore;
 import oshi.software.os.OSProcess;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 // BACKEND: Using OSHI library to gather system metrics
 // Source: https://github.com/oshi/oshi
@@ -21,16 +23,21 @@ public class GatherMetrics {
     private final CentralProcessor processor;
     private final GlobalMemory memory;
     private final List<HWDiskStore> diskStores;
-    private long[] prevTicks;
+    private long[] prevCpuTicks;
+
+    // Process tracking
+    private final Map<Integer, OSProcess> prevProcesses = new HashMap<>();
+    private long lastProcessSampleTime;
 
     // Default constructor, which asserts system metrics
     GatherMetrics(){
         SystemInfo si = new SystemInfo();
+
         os = si.getOperatingSystem();
         processor = si.getHardware().getProcessor();
         memory = si.getHardware().getMemory();
         diskStores = si.getHardware().getDiskStores();
-        prevTicks = processor.getSystemCpuLoadTicks();
+        prevCpuTicks = processor.getSystemCpuLoadTicks();
 
         // Assert basic system metrics
         assert(os != null) : "OS not detected";
@@ -38,7 +45,6 @@ public class GatherMetrics {
         assert(os.getVersionInfo() != null) : "OS Version info not detected";
         assert(os.getBitness() == 32 || os.getBitness() == 64) : "OS Bitness should be 32 or 64";
 
-        assert(processor != null) : "Processor not detected";
         assert(memory != null) : "Memory not detected";
         assert(!diskStores.isEmpty()) : "There should be at least one disk!";
     }
@@ -69,9 +75,10 @@ public class GatherMetrics {
 
     // CPU Usage
     public double getCpuUsage() {
-        double load = processor.getSystemCpuLoadBetweenTicks(prevTicks) * 100;
-        prevTicks = processor.getSystemCpuLoadTicks();
-        return load;
+        long[] ticks = processor.getSystemCpuLoadTicks();
+        double load = processor.getSystemCpuLoadBetweenTicks(prevCpuTicks) * 100;
+        prevCpuTicks = ticks;
+        return Math.max(0, load);
     }
 
     // Interrupts
@@ -89,9 +96,12 @@ public class GatherMetrics {
         return processor.getSystemCpuLoadTicks()[CentralProcessor.TickType.SYSTEM.getIndex()];
     }
 
+    // Logical Cores
+    public int getLogicalCoreCount() { return processor.getLogicalProcessorCount(); }
+
     // Thread Count
     public int getThreadCount() {
-        return processor.getLogicalProcessorCount();
+        return os.getThreadCount();
     }
 
     // =================
@@ -108,15 +118,11 @@ public class GatherMetrics {
         return memory.getTotal() - memory.getAvailable();
     }
 
-    // Cached Memory (approximation)
-    public long getCachedMemory() {
-        return memory.getVirtualMemory().getSwapUsed();
-    }
+    public long getSwapUsed() { return memory.getVirtualMemory().getSwapUsed(); }
 
-    // Page Faults
-    public long getPageFaults() {
-        return memory.getVirtualMemory().getSwapPagesIn();
-    }
+    public long getSwapPagesIn() { return memory.getVirtualMemory().getSwapPagesIn(); }
+
+    public long getSwapPagesOut() { return memory.getVirtualMemory().getSwapPagesOut(); }
 
     // =================
     // DISK METRICS
@@ -138,21 +144,19 @@ public class GatherMetrics {
     }
 
     // Create a list of info about each disk on the system
+    // Create a list of info about each disk on the system
     public List<DiskMetrics> getDiskMetrics() {
         List<DiskMetrics> list = new ArrayList<>();
 
         for (OSFileStore fs : os.getFileSystem().getFileStores()) {
-
             long total = fs.getTotalSpace();
             long free = fs.getUsableSpace();
             long used = total - free;
 
-            list.add(new DiskMetrics(
-                    fs.getMount(),
-                    total,
-                    used,
-                    free
-            ));
+            // Calculate disk usage percentage (but do not insert this into the database)
+            double usedPercent = (double) used / total * 100;
+
+            list.add(new DiskMetrics(fs.getMount(), total, used, free));
         }
 
         return list;
@@ -165,27 +169,54 @@ public class GatherMetrics {
     public List<ProcessMetrics> getProcessMetrics() {
         List<ProcessMetrics> list = new ArrayList<>();
 
-        List<OSProcess> processes = os.getProcesses(null, OperatingSystem.ProcessSorting.CPU_DESC, 0);
+        long now = System.currentTimeMillis();
+        long elapsedMs = now - lastProcessSampleTime;
+        lastProcessSampleTime = now;
+
+        List<OSProcess> processes =
+                os.getProcesses(null, OperatingSystem.ProcessSorting.CPU_DESC, 0);
+
+        Map<Integer, OSProcess> currentMap = new HashMap<>();
 
         for (OSProcess p : processes) {
+            int pid = p.getProcessID();
+            currentMap.put(pid, p);
 
-            double cpu = 100d * p.getProcessCpuLoadCumulative() / processor.getLogicalProcessorCount();
-            double ram = 100d * p.getResidentSetSize() / memory.getTotal();
+            OSProcess prev = prevProcesses.get(pid);
 
-            long diskBytes = p.getBytesRead() + p.getBytesWritten();
-            double diskPercent = diskBytes / (double) (1024 * 1024 * 1024); // normalize
+            double cpu = 0;
+            double diskRate = 0;
+
+            if (prev != null && elapsedMs > 0) {
+
+                // CPU usage between ticks
+                cpu = 100d * p.getProcessCpuLoadBetweenTicks(prev);
+
+                // Disk rate (bytes/sec)
+                long prevBytes = prev.getBytesRead() + prev.getBytesWritten();
+                long currBytes = p.getBytesRead() + p.getBytesWritten();
+
+                long deltaBytes = currBytes - prevBytes;
+                diskRate = (deltaBytes * 1000d) / elapsedMs;
+            }
+
+            double ramPercent = 100d * p.getResidentSetSize() / memory.getTotal();
 
             list.add(new ProcessMetrics(
-                    p.getProcessID(),
+                    pid,
                     p.getName(),
                     cpu,
-                    ram,
-                    diskPercent
+                    ramPercent,
+                    diskRate
             ));
         }
 
+        prevProcesses.clear();
+        prevProcesses.putAll(currentMap);
+
         return list;
     }
+
 
     // =================
     // INNER DATA CLASSES
@@ -203,6 +234,11 @@ public class GatherMetrics {
             this.total = total;
             this.used = used;
             this.free = free;
+        }
+
+        // Disk usage percentage calculation (for use in the application, not stored in DB)
+        public double getDiskUsagePercentage() {
+            return (double) used / total * 100;
         }
     }
 
