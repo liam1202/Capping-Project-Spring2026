@@ -23,11 +23,13 @@ public class GatherMetrics {
     private final CentralProcessor processor;
     private final GlobalMemory memory;
     private final List<HWDiskStore> diskStores;
+
     private long[] prevCpuTicks;
 
-    // Process tracking
-    private final Map<Integer, OSProcess> prevProcesses = new HashMap<>();
-    private long lastProcessSampleTime;
+    // Process tracking by PID (instead of using OSProcess reference)
+    private final Map<Integer, Long> prevIoBytes = new HashMap<>();
+
+    private Map<Integer, OSProcess> prevProcMap = new HashMap<>();
 
     // Default constructor, which asserts system metrics
     GatherMetrics(){
@@ -37,6 +39,7 @@ public class GatherMetrics {
         processor = si.getHardware().getProcessor();
         memory = si.getHardware().getMemory();
         diskStores = si.getHardware().getDiskStores();
+
         prevCpuTicks = processor.getSystemCpuLoadTicks();
 
         // Assert basic system metrics
@@ -49,15 +52,15 @@ public class GatherMetrics {
         assert(!diskStores.isEmpty()) : "There should be at least one disk!";
     }
 
-    // Gets system uptime
+    // Helper Function
+    private double clamp(double val) {
+        if (Double.isNaN(val) || Double.isInfinite(val)) return 0;
+        return Math.max(0, Math.min(100, val));
+    }
+
+    // Gets system uptime (in seconds)
     public long getUptime() {
-        // Returns value in seconds
-        long uptime = os.getSystemUptime();
-
-        // Uptime needs to be positive
-        assert(uptime >= 0) : "Uptime should be non-negative!";
-
-        return uptime;
+        return Math.max(0, os.getSystemUptime());
     }
 
     // =================
@@ -75,10 +78,9 @@ public class GatherMetrics {
 
     // CPU Usage
     public double getCpuUsage() {
-        long[] ticks = processor.getSystemCpuLoadTicks();
-        double load = processor.getSystemCpuLoadBetweenTicks(prevCpuTicks) * 100;
-        prevCpuTicks = ticks;
-        return Math.max(0, load);
+        double load = processor.getSystemCpuLoadBetweenTicks(prevCpuTicks) * 100.0;
+        prevCpuTicks = processor.getSystemCpuLoadTicks();
+        return clamp(load);
     }
 
     // Interrupts
@@ -118,11 +120,16 @@ public class GatherMetrics {
         return memory.getTotal() - memory.getAvailable();
     }
 
+    // Avaliable Memory
+    public long getAvailableMemory() { return memory.getAvailable(); }
+
     public long getSwapUsed() { return memory.getVirtualMemory().getSwapUsed(); }
 
     public long getSwapPagesIn() { return memory.getVirtualMemory().getSwapPagesIn(); }
 
     public long getSwapPagesOut() { return memory.getVirtualMemory().getSwapPagesOut(); }
+
+    public double getMemoryUsagePercent() { return clamp((getUsedMemory() * 100.0) / memory.getTotal()); }
 
     // =================
     // DISK METRICS
@@ -144,17 +151,13 @@ public class GatherMetrics {
     }
 
     // Create a list of info about each disk on the system
-    // Create a list of info about each disk on the system
     public List<DiskMetrics> getDiskMetrics() {
         List<DiskMetrics> list = new ArrayList<>();
 
         for (OSFileStore fs : os.getFileSystem().getFileStores()) {
             long total = fs.getTotalSpace();
             long free = fs.getUsableSpace();
-            long used = total - free;
-
-            // Calculate disk usage percentage (but do not insert this into the database)
-            double usedPercent = (double) used / total * 100;
+            long used = Math.max(0, total - free);
 
             list.add(new DiskMetrics(fs.getMount(), total, used, free));
         }
@@ -165,58 +168,74 @@ public class GatherMetrics {
     // =================
     // PROCESS METRICS
     // =================
-
     public List<ProcessMetrics> getProcessMetrics() {
+
         List<ProcessMetrics> list = new ArrayList<>();
 
-        long now = System.currentTimeMillis();
-        long elapsedMs = now - lastProcessSampleTime;
-        lastProcessSampleTime = now;
-
+        // FIX: OSHI snapshot (must be consistent per call)
         List<OSProcess> processes =
-                os.getProcesses(null, OperatingSystem.ProcessSorting.CPU_DESC, 0);
+                os.getProcesses(null, OperatingSystem.ProcessSorting.CPU_DESC, 100);
 
-        Map<Integer, OSProcess> currentMap = new HashMap<>();
+        // FIX: new snapshot for next tick (no stale references)
+        Map<Integer, OSProcess> newSnapshot = new HashMap<>();
 
         for (OSProcess p : processes) {
-            int pid = p.getProcessID();
-            currentMap.put(pid, p);
 
-            OSProcess prev = prevProcesses.get(pid);
+            int pid = p.getProcessID();
+
+            // ================= CPU =================
+            OSProcess prev = prevProcMap.get(pid);
 
             double cpu = 0;
-            double diskRate = 0;
 
-            if (prev != null && elapsedMs > 0) {
-
-                // CPU usage between ticks
-                cpu = 100d * p.getProcessCpuLoadBetweenTicks(prev);
-
-                // Disk rate (bytes/sec)
-                long prevBytes = prev.getBytesRead() + prev.getBytesWritten();
-                long currBytes = p.getBytesRead() + p.getBytesWritten();
-
-                long deltaBytes = currBytes - prevBytes;
-                diskRate = (deltaBytes * 1000d) / elapsedMs;
+            // FIX: correct OSHI delta-based CPU calculation
+            if (prev != null) {
+                cpu = p.getProcessCpuLoadBetweenTicks(prev) * 100.0;
             }
 
-            double ramPercent = 100d * p.getResidentSetSize() / memory.getTotal();
+            cpu = clamp(cpu);
 
+            // ================= RAM =================
+            double ram = (memory.getTotal() > 0)
+                    ? (p.getResidentSetSize() * 100.0) / memory.getTotal()
+                    : 0;
+
+            ram = clamp(ram);
+
+            // ================= DISK IO =================
+            long ioBytes = p.getBytesRead() + p.getBytesWritten();
+            Long prevIo = prevIoBytes.get(pid);
+
+            double disk = 0;
+
+            if (prevIo != null) {
+                double delta = ioBytes - prevIo;
+
+                // FIX: convert to per-second activity score
+                disk = (delta * 1000.0) / 1_000_000.0;
+            }
+
+            disk = clamp(disk);
+
+            // ================= OUTPUT =================
             list.add(new ProcessMetrics(
                     pid,
                     p.getName(),
                     cpu,
-                    ramPercent,
-                    diskRate
+                    ram,
+                    disk
             ));
+
+            // ================= STATE UPDATE =================
+            newSnapshot.put(pid, p);
+            prevIoBytes.put(pid, ioBytes);
         }
 
-        prevProcesses.clear();
-        prevProcesses.putAll(currentMap);
+        // FIX: swap snapshot cleanly (prevents stale map growth)
+        prevProcMap = newSnapshot;
 
         return list;
     }
-
 
     // =================
     // INNER DATA CLASSES
@@ -234,11 +253,6 @@ public class GatherMetrics {
             this.total = total;
             this.used = used;
             this.free = free;
-        }
-
-        // Disk usage percentage calculation (for use in the application, not stored in DB)
-        public double getDiskUsagePercentage() {
-            return (double) used / total * 100;
         }
     }
 

@@ -1,10 +1,6 @@
 package com.systemwatch;
 
 import com.systemwatch.db.DatabaseManager;
-import com.systemwatch.model.CpuRecord;
-import com.systemwatch.model.RamRecord;
-import com.systemwatch.model.DiskRecord;
-import com.systemwatch.model.ProcessRecord;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Random;

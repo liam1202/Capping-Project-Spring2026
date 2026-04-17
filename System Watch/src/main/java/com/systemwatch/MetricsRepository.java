@@ -1,11 +1,6 @@
 package com.systemwatch;
 
-import com.systemwatch.GatherMetrics;
 import com.systemwatch.db.DatabaseManager;
-import com.systemwatch.model.CpuRecord;
-import com.systemwatch.model.RamRecord;
-import com.systemwatch.model.DiskRecord;
-import com.systemwatch.model.ProcessRecord;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
@@ -19,24 +14,27 @@ public class MetricsRepository {
 
     // Populates database with OS statistics
     public void collectAll() {
-        try {
-            insertCpuMetrics();
-            insertRamMetrics();
-            insertDiskMetrics();
-            insertProcessMetrics();
+        try (Connection conn = DatabaseManager.getConnection()) {
+            long timestamp = System.currentTimeMillis();
+
+            insertCpuMetrics(conn, timestamp);
+            insertRamMetrics(conn, timestamp);
+            insertDiskMetrics(conn, timestamp);
+            insertProcessMetrics(conn, timestamp);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     // CPU INSERT
-    public void insertCpuMetrics() throws Exception {
-        String sql = "INSERT INTO cpu VALUES (?, ?, ?, ?, ?, ?)";
+    public void insertCpuMetrics(Connection conn, long time) throws Exception {
+        String sql = "INSERT INTO cpu " +
+                "(timestamp, cpu_usage_percentage, interrupts, user_mode_time, kernel_mode_time, thread_count) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setLong(1, System.currentTimeMillis());
+            ps.setLong(1, time);
             ps.setDouble(2, metrics.getCpuUsage());
             ps.setLong(3, metrics.getInterrupts());
             ps.setDouble(4, metrics.getUserTime());
@@ -48,30 +46,33 @@ public class MetricsRepository {
     }
 
     // RAM INSERT
-    public void insertRamMetrics() throws Exception {
-        String sql = "INSERT INTO ram VALUES (?, ?, ?, ?, ?)";
+    public void insertRamMetrics(Connection conn, long time) throws Exception {
+        String sql = "INSERT INTO ram " +
+                "(timestamp, total_memory_bytes, used_memory_bytes, cached_memory_bytes, page_faults) " +
+                "VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setLong(1, System.currentTimeMillis());
+            ps.setLong(1, time);
             ps.setLong(2, metrics.getTotalMemory());
             ps.setLong(3, metrics.getUsedMemory());
-            ps.setLong(4, metrics.getSwapUsed());
-            ps.setLong(5, metrics.getSwapPagesIn());
+
+            // OSHI does not provide true cache mapping, so estimated using available memory
+            ps.setLong(4, metrics.getAvailableMemory());
+
+            ps.setLong(5, metrics.getSwapUsed());
 
             ps.executeUpdate();
         }
     }
 
     // DISK INSERT
-    public void insertDiskMetrics() throws Exception {
-        String sql = "INSERT INTO disk VALUES (?, ?, ?, ?, ?)";
+    public void insertDiskMetrics(Connection conn, long time) throws Exception {
+        String sql = "INSERT INTO disk " +
+                "(timestamp, disk_id, disk_total_bytes, disk_used_bytes, disk_free_bytes) " +
+                "VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            long time = System.currentTimeMillis();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             for (GatherMetrics.DiskMetrics d : metrics.getDiskMetrics()) {
 
@@ -88,12 +89,12 @@ public class MetricsRepository {
     }
 
     // PROCESS INSERT
-    public void insertProcessMetrics() throws Exception {
-        String sql = "INSERT INTO process VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    public void insertProcessMetrics(Connection conn, long time) throws Exception {
+        String sql = "INSERT INTO " +
+                "process (timestamp, pid, process_name, cpu_percent, ram_percent, disk_percent, marked_for_suspension, valid_for_tracking) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            long time = System.currentTimeMillis();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
             for (GatherMetrics.ProcessMetrics p : metrics.getProcessMetrics()) {
                 ps.setLong(1, time);
