@@ -1,0 +1,3 @@
+com\systemwatch\MetricsRepositoryTest.class
+com\systemwatch\IntegrationTest.class
+com\systemwatch\GatherMetricsTest.class

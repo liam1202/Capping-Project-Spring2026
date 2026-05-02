@@ -16,7 +16,7 @@ class MetricsRepositoryTest {
 
     @BeforeEach
     void setup() throws Exception {
-        conn = DatabaseManager.getConnection(); // ideally points to test DB
+        conn = DatabaseManager.getConnection();
         repo = new MetricsRepository();
     }
 

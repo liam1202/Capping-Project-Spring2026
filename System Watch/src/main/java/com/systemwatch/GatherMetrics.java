@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 // BACKEND: Using OSHI library to gather system metrics
 // Source: https://github.com/oshi/oshi
@@ -28,10 +29,13 @@ public class GatherMetrics {
     private long[] prevCpuTicks;
 
     // Stores previous disk I/O byte counts per process for disk percentage calculations
-    private final Map<Integer, Long> prevIoBytes = new HashMap<>();
+    private final Map<Integer, Long> prevIoBytes = new ConcurrentHashMap<>();
 
     // Stores previous process snapshots used for CPU usage calculations
-    private Map<Integer, OSProcess> prevProcMap = new HashMap<>();
+    private Map<Integer, OSProcess> prevProcMap = new ConcurrentHashMap<>();
+
+    private long lastCpuSampleTime = 0;
+    private static final long MIN_CPU_SAMPLE_INTERVAL_MS = 500;
 
     // Default constructor, which asserts system metrics
     GatherMetrics(){
@@ -42,8 +46,6 @@ public class GatherMetrics {
         memory = si.getHardware().getMemory();
         diskStores = si.getHardware().getDiskStores();
 
-        prevCpuTicks = processor.getSystemCpuLoadTicks();
-
         // Assert basic system metrics
         assert(os != null) : "OS not detected";
         assert(os.getFamily() != null) : "OS Family not detected";
@@ -52,6 +54,8 @@ public class GatherMetrics {
 
         assert(memory != null) : "Memory not detected";
         assert(!diskStores.isEmpty()) : "There should be at least one disk!";
+
+        prevCpuTicks = processor.getSystemCpuLoadTicks();
     }
 
     // Helper function that makes sure values remain within a valid percentage range
@@ -80,13 +84,18 @@ public class GatherMetrics {
     }
 
     // Calculates total CPU usage between tick snapshots (as a percentage)
-    public double getCpuUsage() {
-        long[] oldTicks = prevCpuTicks;
-        long[] newTicks = processor.getSystemCpuLoadTicks();
+    public synchronized double getCpuUsage() {
+        long now = System.currentTimeMillis();
 
-        double load = processor.getSystemCpuLoadBetweenTicks(oldTicks) * 100.0;
+        if (now - lastCpuSampleTime < MIN_CPU_SAMPLE_INTERVAL_MS) {
+            return 0;
+        }
+
+        long[] newTicks = processor.getSystemCpuLoadTicks();
+        double load = processor.getSystemCpuLoadBetweenTicks(prevCpuTicks) * 100.0;
 
         prevCpuTicks = newTicks;
+        lastCpuSampleTime = now;
 
         return clamp(load);
     }
@@ -130,7 +139,7 @@ public class GatherMetrics {
         return memory.getTotal() - memory.getAvailable();
     }
 
-    // Avaliable Memory
+    // Available Memory
     public long getAvailableMemory() {
         return memory.getAvailable();
     }
@@ -167,6 +176,7 @@ public class GatherMetrics {
 
         // Iterate through all disks and add model to list
         for (HWDiskStore disk : diskStores) {
+            disk.updateAttributes();
             num++;
             models.add("Disk #" + num + ": " + disk.getModel());
         }
@@ -264,13 +274,7 @@ public class GatherMetrics {
             disk = clamp(disk);
 
             // Adds the computed metrics for this process to the result list
-            list.add(new ProcessMetrics(
-                    pid,
-                    p.getName(),
-                    cpu,
-                    ram,
-                    disk
-            ));
+            list.add(new ProcessMetrics(pid, p.getName(), cpu, ram, disk));
 
             // Stores the current OSProcess snapshot for future CPU delta calculations
             newSnapshot.put(pid, p);
