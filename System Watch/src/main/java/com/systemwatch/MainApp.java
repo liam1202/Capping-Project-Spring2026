@@ -1,7 +1,5 @@
 package com.systemwatch;
 import com.systemwatch.db.DatabaseManager;
-import com.systemwatch.DatabasePopulator;
-import com.systemwatch.MetricsRepository;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
