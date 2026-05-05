@@ -1,0 +1,17 @@
+-------------------------------------------------------------------------------
+Test set: com.systemwatch.DatabasePopulatorTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 1.015 s <<< FAILURE! -- in com.systemwatch.DatabasePopulatorTest
+com.systemwatch.DatabasePopulatorTest.testDataRetentionGranularitySampling -- Time elapsed: 0.777 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: CPU table should have 11 rows in the sampled window. ==> expected: <11> but was: <8>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:166)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:664)
+	at com.systemwatch.DatabasePopulatorTest.verifySampledWindow(DatabasePopulatorTest.java:146)
+	at com.systemwatch.DatabasePopulatorTest.testDataRetentionGranularitySampling(DatabasePopulatorTest.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

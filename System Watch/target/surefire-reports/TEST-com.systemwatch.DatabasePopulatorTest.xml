@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.systemwatch.MetricsRepositoryTest" time="1.415" tests="5" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.systemwatch.DatabasePopulatorTest" time="1.015" tests="2" errors="0" skipped="0" failures="1">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -40,11 +40,9 @@
     <property name="os.version" value="10.0"/>
     <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
     <property name="file.encoding" value="UTF-8"/>
-    <property name="jnidispatch.path" value="C:\Users\Gener\AppData\Local\Temp\jna-68687837\jna5288496852991178014.dll"/>
     <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
     <property name="java.vendor.version" value="Microsoft-13106404"/>
     <property name="localRepository" value="C:\Users\Gener\.m2\repository"/>
-    <property name="jna.loaded" value="true"/>
     <property name="java.vendor.url.bug" value="https://github.com/microsoft/openjdk/issues"/>
     <property name="java.io.tmpdir" value="C:\Users\Gener\AppData\Local\Temp\"/>
     <property name="java.version" value="21.0.10"/>
@@ -61,24 +59,19 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="testInsertRamMetrics" classname="com.systemwatch.MetricsRepositoryTest" time="0.102">
-    <system-out><![CDATA[Successful!
-]]></system-out>
+  <testcase name="testDataRetentionGranularitySampling" classname="com.systemwatch.DatabasePopulatorTest" time="0.777">
+    <failure message="CPU table should have 11 rows in the sampled window. ==&gt; expected: &lt;11&gt; but was: &lt;8&gt;" type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: CPU table should have 11 rows in the sampled window. ==> expected: <11> but was: <8>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:166)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:664)
+	at com.systemwatch.DatabasePopulatorTest.verifySampledWindow(DatabasePopulatorTest.java:146)
+	at com.systemwatch.DatabasePopulatorTest.testDataRetentionGranularitySampling(DatabasePopulatorTest.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+]]></failure>
   </testcase>
-  <testcase name="testInsertDiskMetrics" classname="com.systemwatch.MetricsRepositoryTest" time="0.101">
-    <system-out><![CDATA[Successful!
-]]></system-out>
-  </testcase>
-  <testcase name="testDataIntegrityAfterInsert" classname="com.systemwatch.MetricsRepositoryTest" time="0.114">
-    <system-out><![CDATA[Successful!
-]]></system-out>
-  </testcase>
-  <testcase name="testInsertCpuMetrics" classname="com.systemwatch.MetricsRepositoryTest" time="0.101">
-    <system-out><![CDATA[Successful!
-]]></system-out>
-  </testcase>
-  <testcase name="testInsertProcessMetrics" classname="com.systemwatch.MetricsRepositoryTest" time="0.993">
-    <system-out><![CDATA[Successful!
-]]></system-out>
-  </testcase>
+  <testcase name="testPopulateAndVerifyData" classname="com.systemwatch.DatabasePopulatorTest" time="0.011"/>
 </testsuite>

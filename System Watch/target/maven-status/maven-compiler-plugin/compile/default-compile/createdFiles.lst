@@ -1,3 +1,4 @@
+com\systemwatch\DataRetentionManager.class
 com\systemwatch\MainView.class
 com\systemwatch\db\DatabaseManager.class
 com\systemwatch\MetricsRepository.class

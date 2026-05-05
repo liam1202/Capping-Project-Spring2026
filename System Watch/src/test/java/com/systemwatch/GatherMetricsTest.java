@@ -12,6 +12,8 @@ class GatherMetricsTest {
     // Retrieve Metrics from GatherMetrics class
     private GatherMetrics metrics;
 
+
+
     // Before each test, get the metrics from OSHI
     @BeforeEach
     void setUp() {

@@ -89,4 +89,11 @@ class MetricsRepositoryTest {
 
         System.out.println("Successful!");
     }
+
+    @AfterEach
+    void teardown() throws Exception {
+        if (conn != null && !conn.isClosed()) {
+            conn.close();
+        }
+    }
 }

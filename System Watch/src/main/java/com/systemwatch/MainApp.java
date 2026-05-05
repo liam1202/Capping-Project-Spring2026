@@ -1,5 +1,7 @@
 package com.systemwatch;
 import com.systemwatch.db.DatabaseManager;
+import com.systemwatch.DataRetentionManager;
+import java.sql.Connection;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -29,6 +31,11 @@ public void start(Stage stage) {
             Thread metricsThread = new Thread(() -> {
                 while (true) {
                     repo.collectAll();
+            try (Connection conn = DatabaseManager.getConnection()) { 
+                DataRetentionManager.deleteOldData(conn, System.currentTimeMillis());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
                     try {
                         Thread.sleep(5000);

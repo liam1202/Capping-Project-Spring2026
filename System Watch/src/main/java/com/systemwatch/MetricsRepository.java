@@ -15,16 +15,25 @@ public class MetricsRepository {
     // Populates database with OS statistics
     public void collectAll() {
         try (Connection conn = DatabaseManager.getConnection()) {
-            long timestamp = System.currentTimeMillis();
-
-            insertCpuMetrics(conn, timestamp);
-            insertRamMetrics(conn, timestamp);
-            insertDiskMetrics(conn, timestamp);
-            insertProcessMetrics(conn, timestamp);
+            collectAll(conn); 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    //Overload with specified conection
+    public void collectAll(Connection conn) {
+    try {
+        long timestamp = System.currentTimeMillis();
+
+        insertCpuMetrics(conn, timestamp);
+        insertRamMetrics(conn, timestamp);
+        insertDiskMetrics(conn, timestamp);
+        insertProcessMetrics(conn, timestamp);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
 
     // CPU INSERT
     public void insertCpuMetrics(Connection conn, long time) throws Exception {

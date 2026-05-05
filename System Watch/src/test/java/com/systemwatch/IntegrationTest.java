@@ -3,6 +3,7 @@ package com.systemwatch;
 import com.systemwatch.db.DatabaseManager;
 import org.junit.jupiter.api.Test;
 
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 
@@ -20,7 +21,7 @@ class IntegrationTest {
         try (Connection conn = DatabaseManager.getConnection()) {
 
             // Collects real-time system metrics
-            repo.collectAll();
+            repo.collectAll(conn);
 
             // Validate all tables received data
             String[] tables = {"cpu", "ram", "disk", "process"};
@@ -39,7 +40,17 @@ class IntegrationTest {
 
                 System.out.println("Insertion was successful on " + table + " Table");
             }
+            
+
+            // Closes database connection
+            if (conn != null && !conn.isClosed()) {
+                conn.close();
+            }
+
             System.out.println("Integration Test Successful!");
         }
+
+
     }
+
 }
