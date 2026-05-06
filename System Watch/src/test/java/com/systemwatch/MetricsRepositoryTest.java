@@ -2,7 +2,9 @@ package com.systemwatch;
 
 import com.systemwatch.db.DatabaseManager;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -14,10 +16,22 @@ class MetricsRepositoryTest {
     private Connection conn;
     private MetricsRepository repo;
 
+    @TempDir
+    Path tempDir;
+
     @BeforeEach
     void setup() throws Exception {
+        Path databaseFile = tempDir.resolve("metrics-repository-test.db");
+        System.setProperty("systemwatch.db.path", databaseFile.toString());
+        DatabaseManager.resetDatabase();
+        DatabaseManager.initDatabase();
         conn = DatabaseManager.getConnection();
         repo = new MetricsRepository();
+    }
+
+    @AfterEach
+    void cleanupProperties() {
+        System.clearProperty("systemwatch.db.path");
     }
 
     // Test insertion of CPU Metrics

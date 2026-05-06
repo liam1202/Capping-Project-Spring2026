@@ -16,8 +16,18 @@ import java.sql.Statement;
 public class DatabaseManager {
 
     private static final String DB_FILE_NAME = "systemwatch.db";
+    private static final String DB_PATH_PROPERTY = "systemwatch.db.path";
 
-    private static String buildDatabaseUrl() throws Exception {
+    private static Path getDatabasePath() throws Exception {
+        String propertyPath = System.getProperty(DB_PATH_PROPERTY);
+        if (propertyPath != null && !propertyPath.isBlank()) {
+            Path dbPath = Paths.get(propertyPath);
+            if (dbPath.getParent() != null) {
+                Files.createDirectories(dbPath.getParent());
+            }
+            return dbPath.toAbsolutePath().normalize();
+        }
+
         String appData = System.getenv("APPDATA");
         Path dbDir;
 
@@ -28,9 +38,13 @@ public class DatabaseManager {
         }
 
         Files.createDirectories(dbDir);
+        return dbDir.resolve(DB_FILE_NAME).toAbsolutePath();
+    }
 
-        Path dbPath = dbDir.resolve(DB_FILE_NAME);
-        return "jdbc:sqlite:" + dbPath.toAbsolutePath();
+    private static String buildDatabaseUrl() throws Exception {
+        Path dbPath = getDatabasePath();
+        String normalizedPath = dbPath.toString().replace("\\", "/");
+        return "jdbc:sqlite:" + normalizedPath + "?busy_timeout=5000&journal_mode=WAL";
     }
 
     public static Connection getConnection() throws SQLException {
@@ -70,17 +84,7 @@ public class DatabaseManager {
 
     // Reset database so data doesn't persist
     public static void resetDatabase() throws Exception {
-        String appData = System.getenv("APPDATA");
-        Path dbDir;
-
-        if (appData != null && !appData.isBlank()) {
-            dbDir = Paths.get(appData, "SystemWatch");
-        } else {
-            dbDir = Paths.get(System.getProperty("user.home"), ".systemwatch");
-        }
-
-        Path dbPath = dbDir.resolve(DB_FILE_NAME);
-
+        Path dbPath = getDatabasePath();
         Files.deleteIfExists(dbPath);
     }
 

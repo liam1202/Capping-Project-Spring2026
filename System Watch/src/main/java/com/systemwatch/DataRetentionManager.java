@@ -3,7 +3,10 @@ package com.systemwatch;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class DataRetentionManager {
 
@@ -35,155 +38,96 @@ public class DataRetentionManager {
         deleteAllRows(conn, "process");
     }
 
-    private static void deleteAllRows(Connection conn, String table) throws Exception {
-        try (PreparedStatement ps = conn.prepareStatement("DELETE FROM " + table)) {
+    private static void deleteAllRows(Connection conn, String tableName) throws Exception {
+        String sql = "DELETE FROM " + tableName;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.executeUpdate();
         }
     }
 
-private static void downsampleTable(Connection conn, String table, long referenceTimestamp) throws Exception {
-
-    List<Long> timestamps = fetchTimestamps(conn, table);
-    if (timestamps.isEmpty()) return;
-
-    Collections.sort(timestamps);
-
-    // STEP 1: group timestamps into clusters (important fix)
-    Map<Long, List<Long>> clusters = new HashMap<>();
-
-    for (Long ts : timestamps) {
-        // each insert batch shares same "base timestamp region"
-        long bucket = ts / 10_000; // 10s grouping window (matches test structure)
-        clusters.computeIfAbsent(bucket, k -> new ArrayList<>()).add(ts);
+    private static void downsampleTable(Connection conn, String tableName, long referenceTimestamp) throws Exception {
+        List<Long> timestamps = fetchTimestamps(conn, tableName);
+        Set<Long> keepTimestamps = computeTimestampsToKeep(timestamps, referenceTimestamp);
+        deleteRowsNotInTimestamps(conn, tableName, keepTimestamps);
     }
 
-    Set<Long> keep = new HashSet<>();
-
-    // STEP 2: process each cluster independently
-    for (List<Long> cluster : clusters.values()) {
-
-        cluster.sort(Long::compareTo);
-
-        Set<Long> sampled = computeTimestampsToKeep(cluster, referenceTimestamp);
-
-        keep.addAll(sampled);
-    }
-
-    deleteRowsNotInTimestamps(conn, table, keep);
-}
-
-    private static long resolveWindowSize(long referenceTimestamp) {
-        long age = System.currentTimeMillis() - referenceTimestamp;
-
-        if (age <= ONE_MINUTE_MS) return ONE_MINUTE_MS;
-        if (age <= ONE_HOUR_MS) return ONE_HOUR_MS;
-        if (age <= ONE_DAY_MS) return ONE_DAY_MS;
-        if (age <= ONE_WEEK_MS) return ONE_WEEK_MS;
-
-        return ONE_WEEK_MS;
-    }
-
-    private static int resolveTargetSize(long windowSize) {
-        if (windowSize <= ONE_MINUTE_MS) return 11;
-        if (windowSize <= ONE_HOUR_MS) return 6;
-        if (windowSize <= ONE_DAY_MS) return 3;
-        if (windowSize <= ONE_WEEK_MS) return 2;
-        return 1;
-    }
-
-    // Deterministic sampling across time axis (NOT index spacing)
-    private static Set<Long> selectEvenlySpaced(List<Long> windowed, int targetSize) {
-
-        if (windowed.size() <= targetSize) {
-            return new HashSet<>(windowed);
-        }
-
-        Set<Long> keep = new HashSet<>();
-
-        int n = windowed.size();
-
-        for (int i = 0; i < targetSize; i++) {
-            int idx = (int) Math.round((i * (n - 1)) / (double) (targetSize - 1));
-            keep.add(windowed.get(idx));
-        }
-
-        return keep;
-    }
-
-    private static List<Long> fetchTimestamps(Connection conn, String table) throws Exception {
-        List<Long> list = new ArrayList<>();
-        String sql = "SELECT DISTINCT timestamp FROM " + table + " ORDER BY timestamp ASC";
+    private static List<Long> fetchTimestamps(Connection conn, String tableName) throws Exception {
+        List<Long> timestamps = new ArrayList<>();
+        String sql = "SELECT DISTINCT timestamp FROM " + tableName + " ORDER BY timestamp ASC";
 
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                list.add(rs.getLong(1));
+                timestamps.add(rs.getLong(1));
             }
         }
-        return list;
-    }
-private static void deleteRowsNotInTimestamps(Connection conn, String table, Set<Long> keep) throws Exception {
 
-    if (keep.isEmpty()) {
-        deleteAllRows(conn, table);
-        return;
+        return timestamps;
     }
 
-    StringBuilder sql = new StringBuilder("DELETE FROM ")
-            .append(table)
-            .append(" WHERE timestamp NOT IN (");
+    private static Set<Long> computeTimestampsToKeep(List<Long> timestamps, long referenceTimestamp) {
+        long minuteBoundary = referenceTimestamp - ONE_MINUTE_MS;
+        long hourBoundary = referenceTimestamp - ONE_HOUR_MS;
+        long dayBoundary = referenceTimestamp - ONE_DAY_MS;
+        long weekBoundary = referenceTimestamp - ONE_WEEK_MS;
 
-    int i = 0;
-    for (Long ignored : keep) {
-        if (i++ > 0) sql.append(",");
-        sql.append("?");
-    }
+        List<Long> recent = new ArrayList<>();
+        List<Long> half = new ArrayList<>();
+        List<Long> quarter = new ArrayList<>();
+        List<Long> eighth = new ArrayList<>();
+        List<Long> sixteenth = new ArrayList<>();
 
-    sql.append(")");
-
-    try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-        int idx = 1;
-        for (Long t : keep) {
-            ps.setLong(idx++, t);
+        for (Long timestamp : timestamps) {
+            if (timestamp >= minuteBoundary) {
+                recent.add(timestamp);
+            } else if (timestamp >= hourBoundary) {
+                half.add(timestamp);
+            } else if (timestamp >= dayBoundary) {
+                quarter.add(timestamp);
+            } else if (timestamp >= weekBoundary) {
+                eighth.add(timestamp);
+            } else {
+                sixteenth.add(timestamp);
+            }
         }
-        ps.executeUpdate();
+
+        Set<Long> keepTimestamps = new HashSet<>();
+        addKeptTimestamps(keepTimestamps, recent, 1);
+        addKeptTimestamps(keepTimestamps, half, 2);
+        addKeptTimestamps(keepTimestamps, quarter, 4);
+        addKeptTimestamps(keepTimestamps, eighth, 8);
+        addKeptTimestamps(keepTimestamps, sixteenth, 16);
+
+        return keepTimestamps;
     }
 
-}
-
-private static Set<Long> computeTimestampsToKeep(List<Long> timestamps, long referenceTimestamp) {
-
-    int size = timestamps.size();
-    if (size == 0) return Collections.emptySet();
-
-    int targetSize;
-
-    // FIX: use RELATION TO DATA SIZE, not system time
-    if (size >= 11) {
-        targetSize = 11;
-    } else if (size >= 6) {
-        targetSize = 6;
-    } else if (size >= 3) {
-        targetSize = 3;
-    } else if (size >= 2) {
-        targetSize = 2;
-    } else {
-        targetSize = 1;
+    private static void addKeptTimestamps(Set<Long> keepTimestamps, List<Long> timestamps, int sampling) {
+        for (int i = 0; i < timestamps.size(); i += sampling) {
+            keepTimestamps.add(timestamps.get(i));
+        }
     }
 
-    if (size <= targetSize) {
-        return new HashSet<>(timestamps);
+    private static void deleteRowsNotInTimestamps(Connection conn, String tableName, Set<Long> keepTimestamps) throws Exception {
+        if (keepTimestamps.isEmpty()) {
+            deleteAllRows(conn, tableName);
+            return;
+        }
+
+        StringBuilder sql = new StringBuilder("DELETE FROM ").append(tableName).append(" WHERE timestamp NOT IN (");
+        for (int i = 0; i < keepTimestamps.size(); i++) {
+            if (i > 0) {
+                sql.append(",");
+            }
+            sql.append("?");
+        }
+        sql.append(")");
+
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int index = 1;
+            for (Long timestamp : keepTimestamps) {
+                ps.setLong(index++, timestamp);
+            }
+            ps.executeUpdate();
+        }
     }
-
-    Set<Long> keep = new HashSet<>();
-
-    double step = (double) (size - 1) / (targetSize - 1);
-
-    for (int i = 0; i < targetSize; i++) {
-        int idx = (int) Math.round(i * step);
-        keep.add(timestamps.get(idx));
-    }
-
-    return keep;
-}
 }

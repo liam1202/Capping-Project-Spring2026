@@ -2,8 +2,9 @@ package com.systemwatch;
 
 import com.systemwatch.db.DatabaseManager;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
 
@@ -11,8 +12,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class IntegrationTest {
 
+    @TempDir
+    Path tempDir;
+
     @Test
     void testFullDataFlow() throws Exception {
+        Path databaseFile = tempDir.resolve("integration-test.db");
+        System.setProperty("systemwatch.db.path", databaseFile.toString());
+        DatabaseManager.resetDatabase();
+        DatabaseManager.initDatabase();
 
         // Creates repository which connects OS metrics collection to database
         MetricsRepository repo = new MetricsRepository();

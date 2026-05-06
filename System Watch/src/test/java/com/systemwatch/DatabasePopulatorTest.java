@@ -1,8 +1,7 @@
 package com.systemwatch;
 
 import com.systemwatch.db.DatabaseManager;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -25,20 +24,20 @@ public class DatabasePopulatorTest {
 
     private long now;
 
-    @BeforeAll
-    void setupDatabase(@TempDir Path tempDir) throws Exception {
-        Path databaseFile = tempDir.resolve("test-systemwatch.db");
-        System.setProperty("systemwatch.db.path", databaseFile.toString());
-        DatabaseManager.initDatabase();
-    }
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
-    void setup() {
+    void setupDatabase() throws Exception {
+        Path databaseFile = tempDir.resolve("test-systemwatch.db");
+        System.setProperty("systemwatch.db.path", databaseFile.toString());
+        DatabaseManager.resetDatabase();
+        DatabaseManager.initDatabase();
         now = System.currentTimeMillis();
     }
 
-    @AfterAll
-    void cleanupProperties() {
+    @AfterEach
+    void cleanupProperties() throws Exception {
         System.clearProperty("systemwatch.db.path");
     }
 
