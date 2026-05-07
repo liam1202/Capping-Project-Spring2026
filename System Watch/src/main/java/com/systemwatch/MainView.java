@@ -32,6 +32,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+import javafx.collections.transformation.FilteredList;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -47,6 +49,9 @@ public class MainView {
 
     private final TableView<ProcessRow> processTable = new TableView<>();
     private final ObservableList<ProcessRow> processRows = FXCollections.observableArrayList();
+
+    private final FilteredList<ProcessRow> filteredProcessRows = new FilteredList<>(processRows, p -> true);
+    private final TextField searchField = new TextField();
 
     private final Label selectedProcessLabel = new Label("Overall System Metrics");
     private final Button suspendResumeButton = new Button("Resume / Suspend");
@@ -134,10 +139,15 @@ public class MainView {
 
         configureProcessTable();
 
+        searchField.setPromptText("Search by PID or process name...");
+        searchField.setMaxWidth(Double.MAX_VALUE);
+
         VBox leftPanel = new VBox(10,
                 new Label("Process List Panel"),
+                searchField,
                 processTable
         );
+
         leftPanel.setPadding(new Insets(10));
         leftPanel.setPrefWidth(430);
         VBox.setVgrow(processTable, Priority.ALWAYS);
@@ -218,7 +228,7 @@ public class MainView {
         stateCol.setPrefWidth(100);
 
         processTable.getColumns().addAll(pidCol, nameCol, cpuCol, ramCol, diskCol, stateCol);
-        processTable.setItems(processRows);
+        processTable.setItems(filteredProcessRows);
         processTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 
         processTable.getSortOrder().add(cpuCol);
@@ -281,6 +291,7 @@ public class MainView {
                 String state = r.markedForSuspension == 0 ? "Running" : "Suspended";
                 processRows.add(new ProcessRow(r.pid, r.name, r.cpuPercent, r.ramPercent, r.diskPercent, state));
             }
+            applySearchFilter(searchField.getText());
 
             // Preserve whatever sort the user currently has applied
             if (!processTable.getSortOrder().isEmpty()) {
@@ -294,6 +305,9 @@ public class MainView {
     }
 
     private void wireEvents() {
+        searchField.textProperty().addListener((obs, oldValue, newValue) -> {
+        applySearchFilter(newValue);
+    });
         processTable.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, selected) -> {
             preserveScrollPosition(() -> {
                 updateActionState(selected);
@@ -329,6 +343,27 @@ public class MainView {
         });
 
         exportPdfButton.setOnAction(event -> exportSelectedProcessPdf());
+    }
+
+    private void applySearchFilter(String searchText) {
+        String filter = searchText == null ? "" : searchText.trim().toLowerCase();
+
+        filteredProcessRows.setPredicate(row -> {
+            if (filter.isEmpty()) {
+                return true;
+            }
+
+            String pidText = String.valueOf(row.getPid());
+            String nameText = row.getProcessName() == null
+                    ? ""
+                    : row.getProcessName().toLowerCase();
+
+            return pidText.contains(filter) || nameText.contains(filter);
+        });
+
+        if (!processTable.getSortOrder().isEmpty()) {
+            processTable.sort();
+        }
     }
 
     private void exportSelectedProcessPdf() {
