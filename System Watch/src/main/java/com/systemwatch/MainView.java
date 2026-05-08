@@ -51,7 +51,7 @@ public class MainView {
     private final TextField searchField = new TextField();
 
     private final Label selectedProcessLabel = new Label("Overall System Metrics");
-    private final Button suspendResumeButton = new Button("Resume / Suspend");
+    
     private final Button exportPdfButton = new Button("Export PNG");
     private final Button clearSelectionButton = new Button("Clear Selection");
 
@@ -157,7 +157,6 @@ public class MainView {
 
         HBox actionBar = new HBox(12,
                 selectedProcessLabel,
-                suspendResumeButton,
                 exportPdfButton,
                 clearSelectionButton
         );
@@ -324,21 +323,7 @@ public class MainView {
             preserveScrollPosition(() -> processTable.getSelectionModel().clearSelection());
         });
 
-        suspendResumeButton.setOnAction(event -> {
-            ProcessRow selected = processTable.getSelectionModel().getSelectedItem();
-            if (selected == null) {
-                showAlert("No process selected", "Please select a process first.");
-                return;
-            }
-
-            if ("Running".equals(selected.getState())) {
-                selected.setState("Suspended");
-            } else {
-                selected.setState("Running");
-            }
-
-            processTable.refresh();
-        });
+        
 
         exportPdfButton.setOnAction(event -> exportSelectedProcessImage());
     }
@@ -414,7 +399,6 @@ public class MainView {
 
     private void updateActionState(ProcessRow selected) {
         boolean hasSelection = selected != null;
-        suspendResumeButton.setDisable(!hasSelection);
         exportPdfButton.setDisable(!hasSelection);
         clearSelectionButton.setDisable(!hasSelection);
     }
