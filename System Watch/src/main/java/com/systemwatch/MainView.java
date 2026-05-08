@@ -34,7 +34,7 @@ import java.io.File;
 
 
 import javafx.collections.transformation.FilteredList;
-
+import javafx.collections.transformation.SortedList;
 
 
 public class MainView {
@@ -47,6 +47,7 @@ public class MainView {
     private final ObservableList<ProcessRow> processRows = FXCollections.observableArrayList();
 
     private final FilteredList<ProcessRow> filteredProcessRows = new FilteredList<>(processRows, p -> true);
+    private final SortedList<ProcessRow> sortedProcessRows = new SortedList<>(filteredProcessRows);
     private final TextField searchField = new TextField();
 
     private final Label selectedProcessLabel = new Label("Overall System Metrics");
@@ -224,7 +225,8 @@ public class MainView {
         stateCol.setPrefWidth(100);
 
         processTable.getColumns().addAll(pidCol, nameCol, cpuCol, ramCol, diskCol, stateCol);
-        processTable.setItems(filteredProcessRows);
+        sortedProcessRows.comparatorProperty().bind(processTable.comparatorProperty());
+        processTable.setItems(sortedProcessRows);
         processTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 
         processTable.getSortOrder().add(cpuCol);
@@ -290,9 +292,9 @@ public class MainView {
             applySearchFilter(searchField.getText());
 
             // Preserve whatever sort the user currently has applied
-            if (!processTable.getSortOrder().isEmpty()) {
-                processTable.sort();
-            }
+            // if (!processTable.getSortOrder().isEmpty()) {
+            //     processTable.sort();
+            // }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -357,9 +359,9 @@ public class MainView {
             return pidText.contains(filter) || nameText.contains(filter);
         });
 
-        if (!processTable.getSortOrder().isEmpty()) {
-            processTable.sort();
-        }
+        // if (!processTable.getSortOrder().isEmpty()) {
+        //     processTable.sort();
+        // }
     }
 
     private void exportSelectedProcessImage() {
