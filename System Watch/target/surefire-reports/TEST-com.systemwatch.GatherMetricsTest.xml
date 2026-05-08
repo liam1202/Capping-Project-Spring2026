@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.systemwatch.GatherMetricsTest" time="3.175" tests="10" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.systemwatch.GatherMetricsTest" time="3.209" tests="10" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -15,7 +15,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Microsoft\jdk-21.0.10.7-hotspot\bin"/>
-    <property name="sun.java.command" value="C:\Users\Gener\AppData\Local\Temp\surefire4327122665448083776\surefirebooter-20260507124059121_3.jar C:\Users\Gener\AppData\Local\Temp\surefire4327122665448083776 2026-05-07T12-40-58_986-jvmRun1 surefire-20260507124059121_1tmp surefire_0-20260507124059121_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\Gener\AppData\Local\Temp\surefire13316479260622660374\surefirebooter-20260508151838572_3.jar C:\Users\Gener\AppData\Local\Temp\surefire13316479260622660374 2026-05-08T15-18-38_433-jvmRun1 surefire-20260508151838572_1tmp surefire_0-20260508151838572_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="C:\dev\Capping-Project-Spring2026\System Watch\target\test-classes;C:\dev\Capping-Project-Spring2026\System Watch\target\classes;C:\Users\Gener\.m2\repository\org\openjfx\javafx-controls\21.0.4\javafx-controls-21.0.4.jar;C:\Users\Gener\.m2\repository\org\openjfx\javafx-controls\21.0.4\javafx-controls-21.0.4-win.jar;C:\Users\Gener\.m2\repository\org\openjfx\javafx-graphics\21.0.4\javafx-graphics-21.0.4.jar;C:\Users\Gener\.m2\repository\org\openjfx\javafx-graphics\21.0.4\javafx-graphics-21.0.4-win.jar;C:\Users\Gener\.m2\repository\org\openjfx\javafx-base\21.0.4\javafx-base-21.0.4.jar;C:\Users\Gener\.m2\repository\org\openjfx\javafx-base\21.0.4\javafx-base-21.0.4-win.jar;C:\Users\Gener\.m2\repository\org\openjfx\javafx-fxml\21.0.4\javafx-fxml-21.0.4.jar;C:\Users\Gener\.m2\repository\org\openjfx\javafx-fxml\21.0.4\javafx-fxml-21.0.4-win.jar;C:\Users\Gener\.m2\repository\org\xerial\sqlite-jdbc\3.46.1.3\sqlite-jdbc-3.46.1.3.jar;C:\Users\Gener\.m2\repository\org\slf4j\slf4j-api\2.0.13\slf4j-api-2.0.13.jar;C:\Users\Gener\.m2\repository\ch\qos\logback\logback-classic\1.5.25\logback-classic-1.5.25.jar;C:\Users\Gener\.m2\repository\ch\qos\logback\logback-core\1.5.25\logback-core-1.5.25.jar;C:\Users\Gener\.m2\repository\com\github\oshi\oshi-core-java11\6.4.2\oshi-core-java11-6.4.2.jar;C:\Users\Gener\.m2\repository\net\java\dev\jna\jna-jpms\5.13.0\jna-jpms-5.13.0.jar;C:\Users\Gener\.m2\repository\net\java\dev\jna\jna-platform-jpms\5.13.0\jna-platform-jpms-5.13.0.jar;C:\Users\Gener\.m2\repository\org\junit\jupiter\junit-jupiter\5.10.2\junit-jupiter-5.10.2.jar;C:\Users\Gener\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.10.2\junit-jupiter-api-5.10.2.jar;C:\Users\Gener\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\Gener\.m2\repository\org\junit\platform\junit-platform-commons\1.10.2\junit-platform-commons-1.10.2.jar;C:\Users\Gener\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\Gener\.m2\repository\org\junit\jupiter\junit-jupiter-params\5.10.2\junit-jupiter-params-5.10.2.jar;C:\Users\Gener\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.10.2\junit-jupiter-engine-5.10.2.jar;C:\Users\Gener\.m2\repository\org\junit\platform\junit-platform-engine\1.10.2\junit-platform-engine-1.10.2.jar;C:\Users\Gener\.m2\repository\org\apache\pdfbox\pdfbox\2.0.31\pdfbox-2.0.31.jar;C:\Users\Gener\.m2\repository\org\apache\pdfbox\fontbox\2.0.31\fontbox-2.0.31.jar;C:\Users\Gener\.m2\repository\commons-logging\commons-logging\1.2\commons-logging-1.2.jar;C:\Users\Gener\.m2\repository\org\openjfx\javafx-swing\21.0.4\javafx-swing-21.0.4.jar;C:\Users\Gener\.m2\repository\org\openjfx\javafx-swing\21.0.4\javafx-swing-21.0.4-win.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -30,7 +30,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\Gener\AppData\Local\Temp\surefire4327122665448083776\surefirebooter-20260507124059121_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\Gener\AppData\Local\Temp\surefire13316479260622660374\surefirebooter-20260508151838572_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="21.0.10+7-LTS"/>
@@ -40,7 +40,7 @@
     <property name="os.version" value="10.0"/>
     <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
     <property name="file.encoding" value="UTF-8"/>
-    <property name="jnidispatch.path" value="C:\Users\Gener\AppData\Local\Temp\jna-68687837\jna15701129223969753312.dll"/>
+    <property name="jnidispatch.path" value="C:\Users\Gener\AppData\Local\Temp\jna-68687837\jna16289044457269129410.dll"/>
     <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
     <property name="java.vendor.version" value="Microsoft-13106404"/>
     <property name="localRepository" value="C:\Users\Gener\.m2\repository"/>
@@ -61,84 +61,84 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="testMemoryConsistency" classname="com.systemwatch.GatherMetricsTest" time="1.033">
-    <system-out><![CDATA[12:41:00.593 [main] DEBUG oshi.software.os.windows.WindowsOperatingSystem -- Debug privileges not enabled.
-12:41:01.008 [main] DEBUG oshi.util.platform.windows.PerfCounterQuery -- Localized PhysicalDisk to PhysicalDisk
-12:41:01.133 [main] DEBUG oshi.util.platform.windows.PerfCounterQuery -- Localized Processor Information to Processor Information
-Used Memory: 21027 MB
-Available Memory: 46996 MB
+  <testcase name="testMemoryConsistency" classname="com.systemwatch.GatherMetricsTest" time="1.009">
+    <system-out><![CDATA[15:18:40.070 [main] DEBUG oshi.software.os.windows.WindowsOperatingSystem -- Debug privileges not enabled.
+15:18:40.449 [main] DEBUG oshi.util.platform.windows.PerfCounterQuery -- Localized PhysicalDisk to PhysicalDisk
+15:18:40.576 [main] DEBUG oshi.util.platform.windows.PerfCounterQuery -- Localized Processor Information to Processor Information
+Used Memory: 19305 MB
+Available Memory: 48718 MB
 Used + Available: 68023 MB
 Total Memory: 68023 MB
 ]]></system-out>
   </testcase>
-  <testcase name="testProcessListNotNull" classname="com.systemwatch.GatherMetricsTest" time="0.378">
-    <system-out><![CDATA[Processes exist! Number of processes: 301
+  <testcase name="testProcessListNotNull" classname="com.systemwatch.GatherMetricsTest" time="0.411">
+    <system-out><![CDATA[Processes exist! Number of processes: 295
 ]]></system-out>
   </testcase>
   <testcase name="testDiskMetricsConsistency" classname="com.systemwatch.GatherMetricsTest" time="0.115">
     <system-out><![CDATA[-----------------------
 Disk: C:\
-Used Memory: 923787 MB
-Free Memory: 1123158 MB
+Used Memory: 923728 MB
+Free Memory: 1123217 MB
 Used + Free: 2046945 MB
 Total Memory: 2046945 MB
 -----------------------
 ]]></system-out>
   </testcase>
-  <testcase name="testProcessMetricsRange" classname="com.systemwatch.GatherMetricsTest" time="0.663">
+  <testcase name="testProcessMetricsRange" classname="com.systemwatch.GatherMetricsTest" time="0.678">
     <system-out><![CDATA[-----------------------
 Process: Idle (PID 0)
-CPU Usage: 97.29%
+CPU Usage: 96.57%
 RAM Usage: 0.00%
 Disk Usage: 0.00%
 -----------------------
 -----------------------
-Process: java (PID 21528)
-CPU Usage: 0.91%
-RAM Usage: 0.31%
-Disk Usage: 0.00%
+Process: java (PID 19808)
+CPU Usage: 1.25%
+RAM Usage: 0.32%
+Disk Usage: 0.05%
 -----------------------
 -----------------------
-Process: java (PID 16232)
+Process: java (PID 7348)
 CPU Usage: 0.00%
 RAM Usage: 0.37%
 Disk Usage: 0.00%
 -----------------------
 -----------------------
-Process: firefox (PID 27936)
+Process: Code (PID 30644)
 CPU Usage: 0.00%
-RAM Usage: 1.67%
-Disk Usage: 0.00%
+RAM Usage: 0.69%
+Disk Usage: 49.03%
 -----------------------
 -----------------------
-Process: Taskmgr (PID 21016)
-CPU Usage: 0.00%
-RAM Usage: 0.11%
-Disk Usage: 0.00%
+Process: Code (PID 16168)
+CPU Usage: 0.17%
+RAM Usage: 0.17%
+Disk Usage: 49.02%
 -----------------------
 ]]></system-out>
   </testcase>
-  <testcase name="testLogicalCoreCount" classname="com.systemwatch.GatherMetricsTest" time="0.08">
+  <testcase name="testLogicalCoreCount" classname="com.systemwatch.GatherMetricsTest" time="0.083">
     <system-out><![CDATA[Logical Cores: 16
 ]]></system-out>
   </testcase>
-  <testcase name="testCpuUsageRange" classname="com.systemwatch.GatherMetricsTest" time="0.585">
-    <system-out><![CDATA[CPU Usage: 0.60%
+  <testcase name="testCpuUsageRange" classname="com.systemwatch.GatherMetricsTest" time="0.595">
+    <system-out><![CDATA[CPU Usage: 0.37%
 ]]></system-out>
   </testcase>
-  <testcase name="testUptimeNonNegative" classname="com.systemwatch.GatherMetricsTest" time="0.076">
-    <system-out><![CDATA[Uptime: ~10129 minutes
+  <testcase name="testUptimeNonNegative" classname="com.systemwatch.GatherMetricsTest" time="0.074">
+    <system-out><![CDATA[Uptime: ~11727 minutes
 ]]></system-out>
   </testcase>
   <testcase name="testThreadCount" classname="com.systemwatch.GatherMetricsTest" time="0.081">
-    <system-out><![CDATA[Threads: 4447
+    <system-out><![CDATA[Threads: 4365
 ]]></system-out>
   </testcase>
-  <testcase name="testMemoryUsagePercent" classname="com.systemwatch.GatherMetricsTest" time="0.08">
-    <system-out><![CDATA[Memory Usage: 31.03%
+  <testcase name="testMemoryUsagePercent" classname="com.systemwatch.GatherMetricsTest" time="0.079">
+    <system-out><![CDATA[Memory Usage: 28.45%
 ]]></system-out>
   </testcase>
-  <testcase name="testDiskModelsNotEmpty" classname="com.systemwatch.GatherMetricsTest" time="0.079">
+  <testcase name="testDiskModelsNotEmpty" classname="com.systemwatch.GatherMetricsTest" time="0.075">
     <system-out><![CDATA[[Disk #1: INTEL SSDPEKNW020T8 (Standard disk drives)]
 ]]></system-out>
   </testcase>

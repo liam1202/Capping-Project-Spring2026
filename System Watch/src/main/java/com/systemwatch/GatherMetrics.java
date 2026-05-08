@@ -27,7 +27,6 @@ public class GatherMetrics {
 
     // Previous CPU tick snapshot used to calculate CPU usage
     private long[] prevCpuTicks;
-    private double lastCachedLoad = 0.0;
 
     // Stores previous disk I/O byte counts per process for disk percentage calculations
     private final Map<Integer, Long> prevIoBytes = new ConcurrentHashMap<>();
@@ -85,28 +84,25 @@ public class GatherMetrics {
     }
 
     
-// Calculates total CPU usage between tick snapshots (as a percentage)
-public synchronized double getCpuUsage() {
-    long now = System.currentTimeMillis();
+    // Calculates total CPU usage between tick snapshots (as a percentage)
+    public synchronized double getCpuUsage() {
+        long now = System.currentTimeMillis();
 
-    // If called too fast, return the previous valid result
-    if (now - lastCpuSampleTime < MIN_CPU_SAMPLE_INTERVAL_MS) {
-        return lastCachedLoad;
-    }
+        if (now - lastCpuSampleTime < MIN_CPU_SAMPLE_INTERVAL_MS) {
+            return 0;
+        }
 
-    // Perform the actual calculation
-    long[] newTicks = processor.getSystemCpuLoadTicks();
-    double load = processor.getSystemCpuLoadBetweenTicks(prevCpuTicks) * 100.0;
+        // Perform the actual calculation
+        long[] newTicks = processor.getSystemCpuLoadTicks();
+        double load = processor.getSystemCpuLoadBetweenTicks(prevCpuTicks) * 100.0;
 
-    // Update state
-    prevCpuTicks = newTicks;
-    lastCpuSampleTime = now;
+        // Update state
+        prevCpuTicks = newTicks;
+        lastCpuSampleTime = now;
 
     // Store the clamped result in our cache before returning
-    lastCachedLoad = clamp(load);
-
-    return lastCachedLoad;
-}
+        return clamp(load);
+    }
 
     // Hardware Interrupts
     public long getInterrupts() {
@@ -260,10 +256,8 @@ public synchronized double getCpuUsage() {
 
             double cpu = 0;
 
-            // Base on number of cores
-            int cores = processor.getLogicalProcessorCount();
             if (prev != null) {
-                cpu = (p.getProcessCpuLoadBetweenTicks(prev) * 100.0) / cores;
+                cpu = (p.getProcessCpuLoadBetweenTicks(prev) * 100.0);
             }
             cpu = clamp(cpu);
 
