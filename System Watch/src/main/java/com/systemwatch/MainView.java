@@ -260,7 +260,7 @@ public class MainView {
             @Override
             protected void updateItem(Number item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : String.format("%.1f%%", item.doubleValue()));
+                setText(empty || item == null ? null : String.format("%.2f%%", item.doubleValue()));
             }
         };
     }
