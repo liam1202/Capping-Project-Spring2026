@@ -32,14 +32,10 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+
 import javafx.collections.transformation.FilteredList;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+
 
 public class MainView {
 
@@ -55,7 +51,7 @@ public class MainView {
 
     private final Label selectedProcessLabel = new Label("Overall System Metrics");
     private final Button suspendResumeButton = new Button("Resume / Suspend");
-    private final Button exportPdfButton = new Button("Export PDF");
+    private final Button exportPdfButton = new Button("Export PNG");
     private final Button clearSelectionButton = new Button("Clear Selection");
 
     private VBox rightPanel;
@@ -342,7 +338,7 @@ public class MainView {
             processTable.refresh();
         });
 
-        exportPdfButton.setOnAction(event -> exportSelectedProcessPdf());
+        exportPdfButton.setOnAction(event -> exportSelectedProcessImage());
     }
 
     private void applySearchFilter(String searchText) {
@@ -366,7 +362,7 @@ public class MainView {
         }
     }
 
-    private void exportSelectedProcessPdf() {
+    private void exportSelectedProcessImage() {
         ProcessRow selected = processTable.getSelectionModel().getSelectedItem();
 
         if (selected == null) {
@@ -374,71 +370,43 @@ public class MainView {
             return;
         }
 
-            try {
-                FileChooser fileChooser = new FileChooser();
-                fileChooser.setTitle("Export Selected Process Visualization");
-                fileChooser.getExtensionFilters().add(
-                        new FileChooser.ExtensionFilter("PDF Files", "*.pdf")
-                );
-                fileChooser.setInitialFileName(
-                        "SystemWatch_PID_" + selected.getPid() + ".pdf"
-                );
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Export Visualization");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("PNG Files", "*.png")
+            );
 
-                File outputFile = fileChooser.showSaveDialog(root.getScene().getWindow());
+            fileChooser.setInitialFileName(
+                    "SystemWatch_PID_" + selected.getPid() + ".png"
+            );
 
-                if (outputFile == null) {
-                    return;
-                }
+            File outputFile = fileChooser.showSaveDialog(root.getScene().getWindow());
 
-                // Make sure the visualization panel is showing selected-process data.
-                selectedProcessLabel.setText(
-                        "Selected: " + selected.getProcessName() + " (PID " + selected.getPid() + ")"
-                );
-                loadProcessVisualizations(selected);
+            if (outputFile == null) {
+                return;
+            }
 
-                // Snapshot the visualization panel only.
-                WritableImage snapshot = rightPanel.snapshot(new SnapshotParameters(), null);
-                BufferedImage bufferedImage = SwingFXUtils.fromFXImage(snapshot, null);
+            WritableImage snapshot =
+                    rightPanel.snapshot(new SnapshotParameters(), null);
 
-                File tempImage = File.createTempFile("systemwatch-export-", ".png");
-                ImageIO.write(bufferedImage, "png", tempImage);
+            BufferedImage bufferedImage =
+                    SwingFXUtils.fromFXImage(snapshot, null);
 
-                try (PDDocument document = new PDDocument()) {
-                    PDRectangle pageSize = PDRectangle.LETTER;
-                    PDPage page = new PDPage(pageSize);
-                    document.addPage(page);
+            ImageIO.write(bufferedImage, "png", outputFile);
 
-                    PDImageXObject image = LosslessFactory.createFromImage(document, bufferedImage);
-
-                    float margin = 36;
-                    float pageWidth = pageSize.getWidth() - (margin * 2);
-                    float pageHeight = pageSize.getHeight() - (margin * 2);
-
-                    float imageWidth = image.getWidth();
-                    float imageHeight = image.getHeight();
-
-                    float scale = Math.min(pageWidth / imageWidth, pageHeight / imageHeight);
-
-                    float drawWidth = imageWidth * scale;
-                    float drawHeight = imageHeight * scale;
-
-                    float x = margin + (pageWidth - drawWidth) / 2;
-                    float y = pageSize.getHeight() - margin - drawHeight;
-
-                    try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                        contentStream.drawImage(image, x, y, drawWidth, drawHeight);
-                    }
-
-                    document.save(outputFile);
-                }
-
-                tempImage.delete();
-
-                showAlert("Export Complete", "PDF saved to:\n" + outputFile.getAbsolutePath());
+            showAlert(
+                    "Export Complete",
+                    "Visualization exported to:\n" + outputFile.getAbsolutePath()
+            );
 
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert("Export Failed", "Could not export PDF:\n" + e.getMessage());
+
+            showAlert(
+                    "Export Failed",
+                    "Could not export visualization:\n" + e.getMessage()
+            );
         }
     }
 
