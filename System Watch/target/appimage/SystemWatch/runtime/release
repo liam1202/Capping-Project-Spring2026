@@ -1,2 +1,2 @@
-JAVA_VERSION="26"
+JAVA_VERSION="24"
 MODULES="java.base java.logging java.transaction.xa java.xml java.sql ch.qos.logback.core org.slf4j ch.qos.logback.classic java.datatransfer java.prefs java.desktop com.sun.jna com.sun.jna.platform com.github.oshi javafx.base jdk.unsupported javafx.graphics javafx.controls java.scripting javafx.fxml jdk.unsupported.desktop javafx.swing com.systemwatch"
