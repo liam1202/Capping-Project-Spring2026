@@ -31,8 +31,8 @@ public void start(Stage stage) {
             Thread metricsThread = new Thread(() -> {
                 while (true) {
                     repo.collectAll();
-            try (Connection conn = DatabaseManager.getConnection()) { 
-                DataRetentionManager.deleteOldData(conn, System.currentTimeMillis());
+                    try (Connection conn = DatabaseManager.getConnection()) {
+                        DataRetentionManager.deleteOldData(conn, System.currentTimeMillis());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
