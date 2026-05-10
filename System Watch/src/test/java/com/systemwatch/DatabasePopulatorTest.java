@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// Test class for DatabasePopulator, responsible for testing the population of demo data and the data retention granularity sampling logic
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class DatabasePopulatorTest {
 
@@ -24,9 +25,11 @@ public class DatabasePopulatorTest {
 
     private long now;
 
+    // Set up a temporary directory for the database to ensure test isolation and prevent interference with any existing databases on the system
     @TempDir
     Path tempDir;
 
+    // Set up the database before each test
     @BeforeEach
     void setupDatabase() throws Exception {
         Path databaseFile = tempDir.resolve("test-systemwatch.db");
@@ -36,11 +39,13 @@ public class DatabasePopulatorTest {
         now = System.currentTimeMillis();
     }
 
+    // Clean up system properties after each test
     @AfterEach
     void cleanupProperties() throws Exception {
         System.clearProperty("systemwatch.db.path");
     }
 
+    // Test the population of demo data and verify that records are inserted into all tables
     @Test
     void testPopulateAndVerifyData() throws Exception {
         DatabasePopulator.populateDemoData();
@@ -53,6 +58,8 @@ public class DatabasePopulatorTest {
         }
     }
 
+    // Test the data retention granularity sampling logic by inserting records at different timestamps and 
+    // verifying that the correct number of records are retained based on the defined retention policy
     @Test
     void testDataRetentionGranularitySampling() throws Exception {
         long recentBase = now - (30L * 1000);
@@ -95,10 +102,12 @@ public class DatabasePopulatorTest {
             insertProcessRecords(conn, sixteenthBase, 11);
         }
 
+        // Executes the data retention logic to downsample old records based on the defined retention policy
         try (Connection conn = DatabaseManager.getConnection()) {
             DataRetentionManager.deleteOldData(conn, now);
         }
-
+        // Verifies that the correct number of records are retained in each table based on the defined retention policy, 
+        // ensuring that more recent data is kept at higher granularity while older data is downsampled appropriately
         try (Connection conn = DatabaseManager.getConnection()) {
             verifySampledWindow(conn, "cpu", "CPU", recentBase);
             verifySampledWindow(conn, "ram", "RAM", recentBase);
@@ -127,6 +136,7 @@ public class DatabasePopulatorTest {
         }
     }
 
+    // Helper method to verify the number of records retained in a specific time window based on the defined retention policy
     private void verifySampledWindow(Connection conn, String table, String label, long base) throws Exception {
         int expectedCount;
         if (base >= now - ONE_MINUTE_MS) {
@@ -147,6 +157,7 @@ public class DatabasePopulatorTest {
         System.out.println(label.toLowerCase() + " test: SUCCESS for base=" + base + " expected=" + expectedCount);
     }
 
+    // Helper methods to count the number of records in a specific table
     private long countRows(Connection conn, String table) throws Exception {
         String sql = "SELECT COUNT(*) FROM " + table;
         try (PreparedStatement ps = conn.prepareStatement(sql);
@@ -156,6 +167,7 @@ public class DatabasePopulatorTest {
         }
     }
 
+    // Helper method to count the number of records in a specific time window
     private long countRowsBetween(Connection conn, String table, long minTimestamp, long maxTimestamp) throws Exception {
         String sql = "SELECT COUNT(*) FROM " + table + " WHERE timestamp >= ? AND timestamp <= ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -168,6 +180,7 @@ public class DatabasePopulatorTest {
         }
     }
 
+    // Helper method to check if a specific timestamp exists in a table, used to verify that the correct records are retained after downsampling
     private boolean timestampExists(Connection conn, String table, long timestamp) throws Exception {
         String sql = "SELECT 1 FROM " + table + " WHERE timestamp = ? LIMIT 1";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -178,6 +191,7 @@ public class DatabasePopulatorTest {
         }
     }
 
+    // Helper methods to insert records into each table
     private void insertCpuRecords(Connection conn, long baseTimestamp, int count) throws Exception {
         String sql = "INSERT OR REPLACE INTO cpu (timestamp, cpu_usage_percentage, interrupts, user_mode_time, kernel_mode_time, thread_count) VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -194,6 +208,7 @@ public class DatabasePopulatorTest {
         }
     }
 
+    // Helper methods to insert records into each table
     private void insertRamRecords(Connection conn, long baseTimestamp, int count) throws Exception {
         String sql = "INSERT OR REPLACE INTO ram (timestamp, total_memory_bytes, used_memory_bytes, cached_memory_bytes, page_faults) VALUES (?, ?, ?, ?, ?)";
 
@@ -209,6 +224,7 @@ public class DatabasePopulatorTest {
         }
     }
 
+    // Helper methods to insert records into each table
     private void insertDiskRecords(Connection conn, long baseTimestamp, int count) throws Exception {
         String sql = "INSERT OR REPLACE INTO disk (timestamp, disk_id, disk_total_bytes, disk_used_bytes, disk_free_bytes) VALUES (?, ?, ?, ?, ?)";
 
@@ -224,6 +240,7 @@ public class DatabasePopulatorTest {
         }
     }
 
+    // Helper methods to insert records into each table
     private void insertProcessRecords(Connection conn, long baseTimestamp, int count) throws Exception {
         String sql = "INSERT OR REPLACE INTO process (timestamp, pid, process_name, cpu_percent, ram_percent, disk_percent, marked_for_suspension, valid_for_tracking) VALUES (?, ?, ?, ?, ?, ?, 0, 1)";
 

@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+// Data Access Object (DAO) for CPU metrics, responsible for retrieving CPU records from the database
 public class CpuDao {
 
     public List<CpuRecord> getLatest(int limit) throws Exception {

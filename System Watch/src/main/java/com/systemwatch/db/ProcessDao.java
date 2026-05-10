@@ -6,9 +6,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-
+// Data Access Object (DAO) for process metrics, responsible for retrieving process records from the database
 public class ProcessDao {
-
+    // Retrieves the latest process records from the database, ordered by timestamp in descending order, limited by the specified number of records
     public List<ProcessRecord> getLatest(int limit) throws Exception {
         String sql = "SELECT * FROM process ORDER BY timestamp DESC LIMIT ?";
 
@@ -37,8 +37,8 @@ public class ProcessDao {
 
         return list;
     }
-
-    public List<ProcessRecord> getCurrentProcesses() throws Exception {
+ // Retrieves the current processes by joining the process table with a subquery that selects the latest timestamp for each process ID, effectively giving the most recent record for each process
+ public List<ProcessRecord> getCurrentProcesses() throws Exception {
         String sql = "SELECT p.* FROM process p INNER JOIN (SELECT pid, MAX(timestamp) as max_ts FROM process GROUP BY pid) latest ON p.pid = latest.pid AND p.timestamp = latest.max_ts";
 
         List<ProcessRecord> list = new ArrayList<>();
@@ -64,7 +64,7 @@ public class ProcessDao {
 
         return list;
     }
-
+    // Retrieves the historical records for a specific process ID, ordered by timestamp in descending order, limited by the specified number of records
     public List<ProcessRecord> getHistoryForPid(int pid, int limit) throws Exception {
         String sql = "SELECT * FROM process WHERE pid = ? ORDER BY timestamp DESC LIMIT ?";
 

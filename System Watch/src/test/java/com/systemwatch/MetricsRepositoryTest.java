@@ -16,6 +16,7 @@ class MetricsRepositoryTest {
     private Connection conn;
     private MetricsRepository repo;
 
+    // Set up a temporary directory for the database to ensure test isolation and prevent interference with any existing databases on the system
     @TempDir
     Path tempDir;
 

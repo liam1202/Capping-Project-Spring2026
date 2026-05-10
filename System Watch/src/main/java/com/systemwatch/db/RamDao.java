@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+// Data Access Object (DAO) for RAM metrics, responsible for retrieving RAM records from the database
 public class RamDao {
 
     public List<RamRecord> getLatest(int limit) throws Exception {
@@ -18,7 +19,7 @@ public class RamDao {
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, limit);
-
+            
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
