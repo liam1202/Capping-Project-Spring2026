@@ -4,6 +4,8 @@ To build and distribute the **System Watch** application, we implemented a Maven
 that compiles the source code, packages dependencies, and generates a Windows installer for end users 
 in an efficient and user-friendly way.
 
+Video Overview Link: https://www.youtube.com/watch?v=ZKmV76ZSntE
+
 ---
 
 # Running the System Watch App
